@@ -22,7 +22,7 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
 {
     ui->setupUi(this);
     // Adicione isto para habilitar leitura de teclas:
-    setFocusPolicy(Qt::StrongFocus);  // Habilita foco para receber teclas
+    this->setFocusPolicy(Qt::StrongFocus);
 
     QLayout *layout = this->layout(); // Pega o layout existente
 
@@ -49,24 +49,28 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     /*************************************************************************************/
     /*************************************************************************************/
     // Cria worker e thread
-    m_worker = new Worker;
-    m_thread = new QThread(this);
+ //   m_worker = new Worker;
+ //   m_thread = new QThread(this);
 
-    // Move o worker para a thread
-    m_worker->moveToThread(m_thread);
-
+ //   // Move o worker para a thread
+ //   m_worker->moveToThread(m_thread);
+/*
+ * ME PARE4CE QUE O CODIGO ACIMA INICIA A THREAD
+ *
+ * E O CODIGO ABAIXO TAMBÉM.. ANALIZAR ISSO QUANDO DER!!!
+ */
     // Conexões importantes
     //connect(m_thread, &QThread::started, m_worker, &Worker::statusUpdated);
-    connect(m_worker, &Worker::statusUpdated, this, [this](const QString &msg) {
-        statusBar()->showMessage(msg);  // Conexão com o nome correto
-    });
+//    connect(m_worker, &Worker::statusUpdated, this, [this](const QString &msg) {
+//        statusBar()->showMessage(msg);  // Conexão com o nome correto
+//    });
 
     // Garante limpeza automática
-    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
-    connect(m_thread, &QThread::finished, m_thread, &QObject::deleteLater);
+//    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
+//    connect(m_thread, &QThread::finished, m_thread, &QObject::deleteLater);
 
     // Inicia a thread
-    m_thread->start();
+//    m_thread->start();
     /*************************************************************************************/
     /*************************************************************************************/
     /*************************************************************************************/
@@ -87,10 +91,91 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     connect(ui->action_Exit_2, &QAction::triggered, this, &PdTermMainTerminal::close);
 
     connect(ui->action_Limpar, &QAction::triggered, this, &PdTermMainTerminal::limparTexto);
+    // No construtor da sua janela (após ui->setupUi(this))
+    connect(ui->menubar, &QMenuBar::triggered, this, [this]() {
+        ui->plainTextEdit->setFocus();  // Restaura o foco após clicar em qualquer menu
+    });
+
+    ui->plainTextEdit->setFocus();
+    // No construtor da MainWindow:
+    ui->plainTextEdit->installEventFilter(this);
+}
+
+PdTermMainTerminal::~PdTermMainTerminal()
+{
+    m_thread->quit();
+    m_thread->wait();  // Opcional: espera a thread finalizar
+    delete m_serial;  // Garante que a porta serial seja fechada
+    delete ui;
+}
+bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == ui->plainTextEdit && event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        QByteArray dataToSend;
+
+        // Tecla com caractere visível (ex: 'A', '1')
+        if (!keyEvent->text().isEmpty()) {
+            char asciiChar = keyEvent->text().at(0).toLatin1();
+            dataToSend.append(asciiChar);
+        }
+        // Teclas especiais (Enter, Backspace, etc.)
+        else {
+            switch (keyEvent->key()) {
+            case Qt::Key_Return: dataToSend.append('\n'); break;  // 0x0A
+            case Qt::Key_Backspace: dataToSend.append(0x08); break; // 0x08
+            case Qt::Key_Escape: dataToSend.append(0x1B); break;   // 0x1B
+            default: return false; // Ignora outras teclas não mapeadas
+            }
+        }
+
+        // Envia os bytes via serial (se houver dados)
+        if (!dataToSend.isEmpty() && m_serial->isConnected()) {
+            m_serial->sendData(dataToSend); // Chama seu método existente
+        }
+
+        return true; // Consome o evento
+    }
+    return QObject::eventFilter(obj, event);
+}
+/*
+bool PdTermMainTerminal::eventFilter2(QObject *obj, QEvent *event) {
+    if (obj == ui->plainTextEdit && event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        qDebug() << "Tecla pressionada no plainTextEdit:" << keyEvent->key();
+
+        // Obtém o caractere Unicode (pode ser vazio para teclas como Shift, Ctrl, etc.)
+        QString text = keyEvent->text();
 
 
 
+        if (!text.isEmpty()) {
+            // Pega o primeiro caractere da string (evita combinações como Shift+A)
+            byte byteToSend = text.at(0).toLatin1(); // Converte para byte ASCII (0-255)
 
+            qDebug() << "Tecla pressionada (byte):" << (int)byteToSend;
+
+            // Exemplo: Enviar pela serial
+            if (m_serial->isConnected() && !text.isEmpty()) {
+                qDebug() << "Serial conectada e Tecla pressionada " << byteToSend;
+                m_serial->sendData(byteToSend );
+            }
+        }
+
+
+        return true; // Consome o evento (opcional)
+
+
+        // Exemplo: Capturar Enter/Return
+        if (keyEvent->key() == Qt::Key_Return) {
+            qDebug() << "Enter pressionado!";
+            return true;  // Evento consumido (não passa para o plainTextEdit)
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
+}
+*/
+void PdTermMainTerminal::testeTelaTerminal()
+{
     // Exemplo 1: Texto verde padrão (com quebra de linha)
     appendTerminalText("$ Usuário logado.");
     // Exemplo 2: Texto vermelho (sem quebra de linha)
@@ -140,21 +225,13 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     appendTerminalText("Alerta: ", QColor(255, 165, 0), false);
     appendTerminalText("Temperatura crítica.", QColor(255, 165, 0));
 
-}
-
-PdTermMainTerminal::~PdTermMainTerminal()
-{
-    m_thread->quit();
-    m_thread->wait();  // Opcional: espera a thread finalizar
-    delete m_serial;  // Garante que a porta serial seja fechada
-    delete ui;
 
 }
-
 void PdTermMainTerminal::keyPressEvent(QKeyEvent *event) {
     qDebug() << "Tecla pressionada:" << event->text();
 
     if (m_serial->isConnected() && event->text().length() > 0) {
+        qDebug() << "Serial conectada e Tecla pressionada " << event->text().toUtf8();
         m_serial->sendData(event->text().toUtf8());
     }
 
@@ -220,7 +297,7 @@ void PdTermMainTerminal::limparTexto() {
 //*******************************************************************************************
 void PdTermMainTerminal::onSerialDataReceived(const QByteArray &data)
 {
-    appendTerminalText(QString::fromUtf8(data), Qt::cyan);
+    appendTerminalText(QString::fromUtf8(data), Qt::green);
 }
 
 void PdTermMainTerminal::onSerialError(const QString &error)
@@ -231,8 +308,8 @@ void PdTermMainTerminal::onSerialError(const QString &error)
 
 void PdTermMainTerminal::onSerialStatusChanged(const QString &status)
 {
-    statusBar()->showMessage(status, 3000);
-    appendTerminalText("[STATUS] " + status, Qt::blue);
+    statusBar()->showMessage(status);
+    //appendTerminalText("[STATUS] " + status, Qt::blue);
     //statusBar()->setText(status);
 }
 
@@ -264,11 +341,11 @@ void PdTermMainTerminal::setup_connect(){
     connect(ui->actionDesconectar, &QAction::triggered,
             m_serial, &PdTermSerial::disconnectSerial);
 
-    connect(ui->actionConfigura_o, &QAction::triggered,
-            this, &PdTermMainTerminal::on_actionSerialSettings_triggered);
+    connect(ui->on_actionSerialSettings, &QAction::triggered,
+            this, &PdTermMainTerminal::on_actionSerialSettings);
 }
 
-void PdTermMainTerminal::on_actionSerialSettings_triggered()
+void PdTermMainTerminal::on_actionSerialSettings()
 {
     QDialog dialog(this);
     QFormLayout layout(&dialog);
@@ -324,19 +401,23 @@ void PdTermMainTerminal::appendTerminalText(const QString &text, const QColor &c
     ui->plainTextEdit->setCurrentCharFormat(colorFormat);
 
     // Adiciona o texto (com ou sem quebra de linha)
-    if (newLine) {
-        ui->plainTextEdit->appendPlainText(text);
-    } else {
-        ui->plainTextEdit->insertPlainText(text);
-    }
+    //if (newLine) {
+    //    ui->plainTextEdit->appendPlainText(text);
+    ////} else {
+    ui->plainTextEdit->insertPlainText(text);
+    //}
 
     // Restaura a formatação original
     ui->plainTextEdit->setCurrentCharFormat(originalFormat);
 
     // Rolagem automática para o final
     QTextCursor cursor = ui->plainTextEdit->textCursor();
+
     cursor.movePosition(QTextCursor::End);
     ui->plainTextEdit->setTextCursor(cursor);
+    ui->plainTextEdit->setEnabled(true);
+    ui->plainTextEdit->setCursorWidth(2);
+    ui->plainTextEdit->setReadOnly(false); // Permite edição
 }
 
 

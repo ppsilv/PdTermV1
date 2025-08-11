@@ -38,7 +38,7 @@ public:
     QAction *actionDesconectar;
     QAction *actionteste;
     QAction *actiontsdfasd;
-    QAction *actionConfigura_o;
+    QAction *on_actionSerialSettings;
     QWidget *centralwidget;
     QPlainTextEdit *plainTextEdit;
     QMenuBar *menubar;
@@ -81,8 +81,8 @@ public:
         actionteste->setObjectName("actionteste");
         actiontsdfasd = new QAction(PdTermMainTerminal);
         actiontsdfasd->setObjectName("actiontsdfasd");
-        actionConfigura_o = new QAction(PdTermMainTerminal);
-        actionConfigura_o->setObjectName("actionConfigura_o");
+        on_actionSerialSettings = new QAction(PdTermMainTerminal);
+        on_actionSerialSettings->setObjectName("on_actionSerialSettings");
         centralwidget = new QWidget(PdTermMainTerminal);
         centralwidget->setObjectName("centralwidget");
         plainTextEdit = new QPlainTextEdit(centralwidget);
@@ -116,7 +116,7 @@ public:
         menubar->addAction(menuSobre->menuAction());
         menuConectar->addAction(actionConectar);
         menuConectar->addAction(actionDesconectar);
-        menuConectar->addAction(actionConfigura_o);
+        menuConectar->addAction(on_actionSerialSettings);
         menuSobre->addSeparator();
         menuSobre->addSeparator();
         menuSobre->addAction(actionteste);
@@ -155,7 +155,7 @@ public:
         actionDesconectar->setText(QCoreApplication::translate("PdTermMainTerminal", "Desconectar    Ctrl+U", nullptr));
         actionteste->setText(QCoreApplication::translate("PdTermMainTerminal", "-", nullptr));
         actiontsdfasd->setText(QCoreApplication::translate("PdTermMainTerminal", "tsdfasd", nullptr));
-        actionConfigura_o->setText(QCoreApplication::translate("PdTermMainTerminal", "Configura\303\247\303\243o", nullptr));
+        on_actionSerialSettings->setText(QCoreApplication::translate("PdTermMainTerminal", "Configura\303\247\303\243o", nullptr));
         menuConectar->setTitle(QCoreApplication::translate("PdTermMainTerminal", "Conex\303\243o", nullptr));
         menuSobre->setTitle(QCoreApplication::translate("PdTermMainTerminal", "Sobre", nullptr));
         menuLimpar->setTitle(QCoreApplication::translate("PdTermMainTerminal", "Ferramentas", nullptr));

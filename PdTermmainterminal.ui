@@ -54,7 +54,7 @@
     </property>
     <addaction name="actionConectar"/>
     <addaction name="actionDesconectar"/>
-    <addaction name="actionConfigura_o"/>
+    <addaction name="on_actionSerialSettings"/>
    </widget>
    <widget class="QMenu" name="menuSobre">
     <property name="title">
@@ -159,7 +159,7 @@
     <string>tsdfasd</string>
    </property>
   </action>
-  <action name="actionConfigura_o">
+  <action name="on_actionSerialSettings">
    <property name="text">
     <string>Configuração</string>
    </property>

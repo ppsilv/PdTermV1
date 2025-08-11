@@ -24,6 +24,7 @@ public:
     ~PdTermMainTerminal();
     void setTextAtPosition(int row, int col, const QString &text, const QColor &color = Qt::green);
     void ensureLineExists(int row);  // Novo método auxiliar
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 public slots:
     void appendTerminalText(const QString &text, const QColor &color = Qt::green, bool newLine = true);
@@ -33,7 +34,8 @@ public slots:
     void onSerialDataReceived(const QByteArray &data);
     void onSerialError(const QString &error);
     void onSerialStatusChanged(const QString &status);
-    void on_actionSerialSettings_triggered();
+    void on_actionSerialSettings();
+    void testeTelaTerminal();
 
 private:
     Ui::PdTermMainTerminal *ui;
