@@ -1,0 +1,9 @@
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/PdTermV1.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/edit_cache.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/rebuild_cache.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/list_install_components.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/install.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/install/local.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/install/strip.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/PdTermV1_autogen_timestamp_deps.dir
+/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/PdTermV1_autogen.dir
