@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(PgTermV1 VERSION 0.1 LANGUAGES CXX)
+project(PdTermV1 VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -16,9 +16,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort)
 # Lista de fontes do projeto
 set(PROJECT_SOURCES
     main.cpp
-    pgtermmainterminal.cpp
-    pgtermmainterminal.h
-    pgtermmainterminal.ui
+    PdTermmainterminal.cpp
+    PdTermmainterminal.h
+    PdTermmainterminal.ui
     worker.h
     worker.cpp
     pdtermserial.h
@@ -26,34 +26,34 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(PgTermV1
+    qt_add_executable(PdTermV1
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 else()
     if(ANDROID)
-        add_library(PgTermV1 SHARED
+        add_library(PdTermV1 SHARED
             ${PROJECT_SOURCES}
         )
     else()
-        add_executable(PgTermV1
+        add_executable(PdTermV1
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
 # Vincula as bibliotecas necessárias
-target_link_libraries(PgTermV1 PRIVATE
+target_link_libraries(PdTermV1 PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::SerialPort
 )
 
 # Configurações específicas de plataforma
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.PgTermV1)
+    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.PdTermV1)
 endif()
 
-set_target_properties(PgTermV1 PROPERTIES
+set_target_properties(PdTermV1 PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -63,12 +63,12 @@ set_target_properties(PgTermV1 PROPERTIES
 
 # Instalação
 include(GNUInstallDirs)
-install(TARGETS PgTermV1
+install(TARGETS PdTermV1
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(PgTermV1)
+    qt_finalize_executable(PdTermV1)
 endif()

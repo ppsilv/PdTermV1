@@ -1,0 +1,16 @@
+# ninja log v5
+4	587	1754870949673051017	PdTermV1_autogen/timestamp	1d84f610ac3451ab
+4	587	1754870949673051017	PdTermV1_autogen/mocs_compilation.cpp	1d84f610ac3451ab
+4	587	1754870949673051017	/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/PdTermV1_autogen/timestamp	1d84f610ac3451ab
+4	587	1754870949673051017	/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/PdTermV1_autogen/mocs_compilation.cpp	1d84f610ac3451ab
+589	2951	1754870952032064281	CMakeFiles/PdTermV1.dir/worker.cpp.o	20282ead38bf5762
+588	5364	1754870954416077688	CMakeFiles/PdTermV1.dir/PdTermV1_autogen/mocs_compilation.cpp.o	a2cdb2233e279d7d
+589	6309	1754870955368083042	CMakeFiles/PdTermV1.dir/pdtermserial.cpp.o	b8c1490020e24b8f
+588	7405	1754870956462089195	CMakeFiles/PdTermV1.dir/PdTermmainterminal.cpp.o	c613f97ad7062709
+17	53	1754870964041131830	PdTermV1_autogen/timestamp	1d84f610ac3451ab
+17	53	1754870964041131830	PdTermV1_autogen/mocs_compilation.cpp	1d84f610ac3451ab
+17	53	1754870964041131830	/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/PdTermV1_autogen/timestamp	1d84f610ac3451ab
+17	53	1754870964041131830	/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/PdTermV1_autogen/mocs_compilation.cpp	1d84f610ac3451ab
+55	71	1754870964147132426	CMakeFiles/PdTermV1.dir/PdTermmainterminal.cpp.o	c613f97ad7062709
+55	2960	1754870967021148599	CMakeFiles/PdTermV1.dir/main.cpp.o	bf4626fa2452bcb9
+2960	3494	1754870967566151666	PdTermV1	e707b0453f6d6158
