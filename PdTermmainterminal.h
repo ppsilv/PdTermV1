@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QProgressBar>
+
 /*
  * pdtermmainterminal.h
  */
@@ -31,6 +32,7 @@ public:
     bool flag_from_terminal_write_to_serial;
     QString openFileXmodem();
 
+
 public slots:
     void appendTerminalText(const QString &text, const QColor &color = Qt::green, bool newLine = true);
     void limparTexto();  // Slot para limpar o QPlainTextEdit
@@ -55,6 +57,9 @@ private:
     PdTermXmodem *m_xmodem;
     void setupXmodemSignals();
     void setupSerialSignals();
+
+    QByteArray receiveSerialData(int timeout_ms);
+    void sendSerialData(const QByteArray& data);
 
     //Metodo
     void setup_ui();

@@ -5,6 +5,8 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QComboBox>
+#include <QMutex>
+#include <QWaitCondition>
 
 class PdTermSerial : public QObject
 {
@@ -44,6 +46,9 @@ public:
     QSerialPort::StopBits getCurrentStopBits() const;
     QSerialPort::FlowControl getCurrentFlowControl() const;
 
+    //Inserido em 11/08 em 15:38
+    QByteArray waitForData(int timeout_ms);
+
 signals:
     void dataReceived(const QByteArray &data);
     void errorOccurred(const QString &error);
@@ -60,6 +65,12 @@ private:
     QSerialPort::Parity currentParity;
     QSerialPort::StopBits currentStopBits;
     QSerialPort::FlowControl currentFlowControl;
+
+    //buffer criacao 11/08 15:35
+    QByteArray m_inputBuffer;
+    QMutex m_bufferMutex;
+    QWaitCondition m_bufferWaitCondition;
+    qint64 m_maxBufferSize = 1024 * 1024; // 1MB máximo
 };
 
 #endif // PDTERMSERIAL_H

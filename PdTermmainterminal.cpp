@@ -34,22 +34,46 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
 
     //***********************************************************************************
     // XMODEM
-    progressBar = new QProgressBar(this);
-    // Configurações visuais (opcional)
-    progressBar->setTextVisible(false); // Oculta o texto percentual
-    progressBar->setFixedWidth(200);    // Largura fixa
-    progressBar->setFixedHeight(15);    // Altura menor que a statusbar
+    progressBar = new QProgressBar(); // Sem parent! A statusBar assumirá o controle
+    progressBar->setTextVisible(true);
+    progressBar->setFixedWidth(200);
+    progressBar->setFixedHeight(18);
 
-    // Adiciona à statusbar (à direita, por exemplo)
-    ui->statusbar->addPermanentWidget(progressBar, 0); // O '0' evita que ela se expanda
-    m_xmodem->envia_dados_serial = [](const QByteArray &data) {
-        // Implementação do envio serial
+    // StyleSheet (como você já tinha)
+    progressBar->setStyleSheet(
+        "QProgressBar {"
+        "    border: 1px solid grey; border-radius: 5px;"
+        "    background: #f0f0f0;"
+        "}"
+        "QProgressBar::chunk {"
+        "    background-color: #69F0AE; border-radius: 5px;"
+        "}"
+        );
+    // Adiciona à statusBar (à direita)
+    ui->statusbar->addPermanentWidget(progressBar);
+    // Opcional: Espaçamento entre widgets na statusBar
+    ui->statusbar->setStyleSheet("QStatusBar::item { border: none; margin: 2px; }");;
+    //------------------------statusbar---------------------------------------------------
+
+    // Configuração unificada
+    m_xmodem->io_context = this;
+
+    // Callback de recepção (já funciona como você tem)
+  //  m_xmodem->recebe_dados_serial = [](void* ctx, int timeout) -> QByteArray {
+  //      return static_cast<PdTermMainTerminal*>(ctx)->receiveSerialData(timeout);
+  //  };
+    m_xmodem->recebe_dados_serial = [](void* ctx, int timeout) -> QByteArray {
+        if (!ctx) return QByteArray(); // ⚠️ Proteção adicional
+        return static_cast<PdTermMainTerminal*>(ctx)->receiveSerialData(timeout);
     };
-    m_xmodem->recebe_dados_serial = [](int timeout_ms) -> QByteArray {
-        QByteArray dadosRecebidos;
-        // Implementação da recepção serial com timeout
-        return dadosRecebidos;
+   // m_xmodem->receive_context = this; // ⚠️ Não esqueça disso!
+
+
+    // Callback de envio (nova versão simplificada)
+    m_xmodem->envia_dados_serial = [](void* ctx, const QByteArray& data) {
+        static_cast<PdTermMainTerminal*>(ctx)->sendSerialData(data);
     };
+
     setupXmodemSignals();
 
     //***********************************************************************************
@@ -60,7 +84,6 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     setupSerialSignals();
     setup_ui();
     setup_connect();
-
 
     if (!layout) {
         layout = new QVBoxLayout(this); // Cria um novo se não houver
@@ -311,7 +334,23 @@ void PdTermMainTerminal::onErroOcorreu(const QString &mensagem) {
 void PdTermMainTerminal::onProgressoAtualizado(int porcentagem) {
     qDebug() << "Progresso:" << porcentagem << "%";
     // Atualiza uma barra de progresso na UI, se existir
+    QString color;
+    if (porcentagem < 50)       color = "#FF5252";  // Vermelho
+    else if (porcentagem < 80)  color = "#FFD740";  // Amarelo
+    else                        color = "#69F0AE";  // Verde
+
+    progressBar->setStyleSheet(
+        "QProgressBar::chunk { background-color: " + color + "; }"
+    );
     progressBar->setValue(porcentagem);
+}
+
+QByteArray PdTermMainTerminal::receiveSerialData(int timeout_ms) {
+    return m_serial->waitForData(timeout_ms);
+}
+
+void PdTermMainTerminal::sendSerialData(const QByteArray& data) {
+    m_serial->sendData(data); // Seu método existente
 }
 //*******************************************************************************************
 //*************************************XMODEM************************************************

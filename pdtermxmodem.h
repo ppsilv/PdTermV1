@@ -13,9 +13,21 @@ public:
     explicit PdTermXmodem(QObject *parent = nullptr);
     void enviarArquivoXmodem();
 
-    // Callbacks que devem ser fornecidos pela aplicação
-    void (*envia_dados_serial)(const QByteArray &data);
-    QByteArray (*recebe_dados_serial)(int timeout_ms);
+    // Callbacks com mesma estrutura
+    typedef QByteArray (*SerialIOFunc)(void* context, int timeout_ms); // Para recepção
+    typedef void (*SerialIOFuncSend)(void* context, const QByteArray& data); // Para envio (agora com const)
+
+    SerialIOFunc recebe_dados_serial = nullptr;
+    SerialIOFuncSend envia_dados_serial = nullptr;
+    void* io_context = nullptr; // Contexto único para ambos
+
+    // Método de envio simplificado
+    void enviarDados(const QByteArray& data) {
+        if (envia_dados_serial && io_context) {
+            envia_dados_serial(io_context, data); // Agora aceita const
+        }
+    }
+
 
 signals:
     void transmissaoCancelada();
@@ -26,6 +38,8 @@ signals:
 private:
     bool esperarPorByte(char byteEsperado, int timeout_ms = 3000);
     char calcularChecksum(const QByteArray &dados);
+    void printFile( QByteArray fileContent );
+
 };
 
 #endif // PDTERMXMODEM_H

@@ -189,14 +189,71 @@ QSerialPort::Parity PdTermSerial::getCurrentParity() const { return currentParit
 QSerialPort::StopBits PdTermSerial::getCurrentStopBits() const { return currentStopBits; }
 QSerialPort::FlowControl PdTermSerial::getCurrentFlowControl() const { return currentFlowControl; }
 
-// Slots privados
-void PdTermSerial::handleReadyRead()
-{
+// Slots privados comentado em 11/08 15:36
+//void PdTermSerial::handleReadyRead()
+//{
+//    QByteArray data = serial->readAll();
+//    if (!data.isEmpty()) {
+//        emit dataReceived(data);
+//        emit statusChanged(QString("%1 bytes recebidos").arg(data.size()));
+//    }
+//}
+
+//   [Thread Principal]                    [Thread Xmodem]
+//       handleReadyRead()                     waitForData()
+//   │                                     │
+//   ├─ Recebe dados da serial             │
+//   ├─ Bloqueia mutex                     │
+//   ├─ Adiciona dados ao buffer           │
+//   ├─ Acorda thread com wakeAll()        │
+//   └─ Libera mutex                       │
+//                                         ├─ Mutex é liberado
+//                                         ├─ Verifica buffer
+//                                         ├─ Retorna dados
+//                                         └─ Libera mutex
+
+
+
+//Criado em 11/08 15:36
+void PdTermSerial::handleReadyRead() {
     QByteArray data = serial->readAll();
     if (!data.isEmpty()) {
+        // Bloqueia o mutex antes de acessar o buffer
+        QMutexLocker locker(&m_bufferMutex);
+
+        // Adiciona os novos dados ao buffer
+        m_inputBuffer.append(data);
+
+        // Notifica todas as threads que estão esperando
+        m_bufferWaitCondition.wakeAll();
+
+        // Emite os sinais (opcional, mantendo sua funcionalidade original)
         emit dataReceived(data);
         emit statusChanged(QString("%1 bytes recebidos").arg(data.size()));
     }
+}
+
+QByteArray PdTermSerial::waitForData(int timeout_ms) {
+    QMutexLocker locker(&m_bufferMutex);
+
+    // Se já houver dados no buffer, retorna imediatamente
+    if (!m_inputBuffer.isEmpty()) {
+        QByteArray result = m_inputBuffer;
+        m_inputBuffer.clear();
+        return result;
+    }
+
+    // Espera até que cheguem dados ou timeout
+    if (timeout_ms > 0) {
+        m_bufferWaitCondition.wait(&m_bufferMutex, timeout_ms);
+    } else {
+        m_bufferWaitCondition.wait(&m_bufferMutex);
+    }
+
+    // Retorna os dados disponíveis (pode estar vazio se foi timeout)
+    QByteArray result = m_inputBuffer;
+    m_inputBuffer.clear();
+    return result;
 }
 
 void PdTermSerial::handleError(QSerialPort::SerialPortError error)
