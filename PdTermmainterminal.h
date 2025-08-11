@@ -29,7 +29,7 @@ public:
 public slots:
     void appendTerminalText(const QString &text, const QColor &color = Qt::green, bool newLine = true);
     void limparTexto();  // Slot para limpar o QPlainTextEdit
-    void keyPressEvent(QKeyEvent *event) override;  // Adicione esta linha
+    void keyPressEvent_old(QKeyEvent *event);// override;  // Adicione esta linha
     /* Serial */
     void onSerialDataReceived(const QByteArray &data);
     void onSerialError(const QString &error);

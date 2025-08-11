@@ -113,6 +113,14 @@ bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         QByteArray dataToSend;
 
+        if ( keyEvent->key() ==  Qt::Key_L){
+            ui->plainTextEdit->clear();
+            return false;
+        }
+        if ( keyEvent->key() == Qt::Key_Y) {
+            m_serial->connectSerial("/dev/ttyUSB0");
+            return false;
+        }
         // Tecla com caractere visível (ex: 'A', '1')
         if (!keyEvent->text().isEmpty()) {
             char asciiChar = keyEvent->text().at(0).toLatin1();
@@ -227,7 +235,7 @@ void PdTermMainTerminal::testeTelaTerminal()
 
 
 }
-void PdTermMainTerminal::keyPressEvent(QKeyEvent *event) {
+void PdTermMainTerminal::keyPressEvent_old(QKeyEvent *event) {
     qDebug() << "Tecla pressionada:" << event->text();
 
     if (m_serial->isConnected() && event->text().length() > 0) {

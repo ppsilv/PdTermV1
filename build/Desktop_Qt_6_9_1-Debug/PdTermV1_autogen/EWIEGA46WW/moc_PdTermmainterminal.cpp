@@ -45,7 +45,7 @@ template <> constexpr inline auto PdTermMainTerminal::qt_create_metaobjectdata<q
         "color",
         "newLine",
         "limparTexto",
-        "keyPressEvent",
+        "keyPressEvent_old",
         "QKeyEvent*",
         "event",
         "onSerialDataReceived",
@@ -73,7 +73,7 @@ template <> constexpr inline auto PdTermMainTerminal::qt_create_metaobjectdata<q
         }}),
         // Slot 'limparTexto'
         QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPublic, QMetaType::Void),
-        // Slot 'keyPressEvent'
+        // Slot 'keyPressEvent_old'
         QtMocHelpers::SlotData<void(QKeyEvent *)>(7, 2, QMC::AccessPublic, QMetaType::Void, {{
             { 0x80000000 | 8, 9 },
         }}),
@@ -120,7 +120,7 @@ void PdTermMainTerminal::qt_static_metacall(QObject *_o, QMetaObject::Call _c, i
         case 1: _t->appendTerminalText((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QColor>>(_a[2]))); break;
         case 2: _t->appendTerminalText((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         case 3: _t->limparTexto(); break;
-        case 4: _t->keyPressEvent((*reinterpret_cast< std::add_pointer_t<QKeyEvent*>>(_a[1]))); break;
+        case 4: _t->keyPressEvent_old((*reinterpret_cast< std::add_pointer_t<QKeyEvent*>>(_a[1]))); break;
         case 5: _t->onSerialDataReceived((*reinterpret_cast< std::add_pointer_t<QByteArray>>(_a[1]))); break;
         case 6: _t->onSerialError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         case 7: _t->onSerialStatusChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
