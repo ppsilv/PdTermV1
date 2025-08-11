@@ -26,9 +26,12 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+
     qt_add_executable(PdTermV1
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        pdtermxmodem.h pdtermxmodem.cpp
     )
 else()
     if(ANDROID)
@@ -47,6 +50,7 @@ target_link_libraries(PdTermV1 PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::SerialPort
 )
+target_link_libraries(PdTermV1 PRIVATE Qt6::Core)
 
 # Configurações específicas de plataforma
 if(${QT_VERSION} VERSION_LESS 6.1.0)

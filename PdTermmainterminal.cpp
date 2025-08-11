@@ -26,6 +26,9 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
 
     QLayout *layout = this->layout(); // Pega o layout existente
 
+    flag_from_serial_write_to_terminal = true;
+    flag_from_terminal_write_to_serial = true;
+
 
     // Agora inicialize o serial
     m_serial = new PdTermSerial(this);
@@ -121,6 +124,11 @@ bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
             m_serial->connectSerial("/dev/ttyUSB0");
             return false;
         }
+        if ( keyEvent->key() == Qt::Key_U) {
+            m_serial->disconnectSerial();
+            return false;
+        }
+
         // Tecla com caractere visível (ex: 'A', '1')
         if (!keyEvent->text().isEmpty()) {
             char asciiChar = keyEvent->text().at(0).toLatin1();
@@ -137,7 +145,7 @@ bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
         }
 
         // Envia os bytes via serial (se houver dados)
-        if (!dataToSend.isEmpty() && m_serial->isConnected()) {
+        if (!dataToSend.isEmpty() && m_serial->isConnected() && flag_from_terminal_write_to_serial ) {
             m_serial->sendData(dataToSend); // Chama seu método existente
         }
 
@@ -145,43 +153,6 @@ bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
     }
     return QObject::eventFilter(obj, event);
 }
-/*
-bool PdTermMainTerminal::eventFilter2(QObject *obj, QEvent *event) {
-    if (obj == ui->plainTextEdit && event->type() == QEvent::KeyPress) {
-        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
-        qDebug() << "Tecla pressionada no plainTextEdit:" << keyEvent->key();
-
-        // Obtém o caractere Unicode (pode ser vazio para teclas como Shift, Ctrl, etc.)
-        QString text = keyEvent->text();
-
-
-
-        if (!text.isEmpty()) {
-            // Pega o primeiro caractere da string (evita combinações como Shift+A)
-            byte byteToSend = text.at(0).toLatin1(); // Converte para byte ASCII (0-255)
-
-            qDebug() << "Tecla pressionada (byte):" << (int)byteToSend;
-
-            // Exemplo: Enviar pela serial
-            if (m_serial->isConnected() && !text.isEmpty()) {
-                qDebug() << "Serial conectada e Tecla pressionada " << byteToSend;
-                m_serial->sendData(byteToSend );
-            }
-        }
-
-
-        return true; // Consome o evento (opcional)
-
-
-        // Exemplo: Capturar Enter/Return
-        if (keyEvent->key() == Qt::Key_Return) {
-            qDebug() << "Enter pressionado!";
-            return true;  // Evento consumido (não passa para o plainTextEdit)
-        }
-    }
-    return QMainWindow::eventFilter(obj, event);
-}
-*/
 void PdTermMainTerminal::testeTelaTerminal()
 {
     // Exemplo 1: Texto verde padrão (com quebra de linha)
@@ -238,10 +209,6 @@ void PdTermMainTerminal::testeTelaTerminal()
 void PdTermMainTerminal::keyPressEvent_old(QKeyEvent *event) {
     qDebug() << "Tecla pressionada:" << event->text();
 
-    if (m_serial->isConnected() && event->text().length() > 0) {
-        qDebug() << "Serial conectada e Tecla pressionada " << event->text().toUtf8();
-        m_serial->sendData(event->text().toUtf8());
-    }
 
     // Exemplo: Ctrl+L para limpar
     if (event->modifiers() & Qt::ControlModifier && event->key() == Qt::Key_L) {
@@ -266,29 +233,7 @@ void PdTermMainTerminal::keyPressEvent_old(QKeyEvent *event) {
     } else {
         event->ignore();
     }
-    // Primeiro verifique se a serial está conectada
-    if (m_serial && m_serial->isConnected()) {
-        // Trate teclas especiais e caracteres imprimíveis
-        if (!event->text().isEmpty() && event->text().at(0).isPrint()) {
-            QString text = event->text();
-            m_serial->sendData(text.toUtf8());
 
-            // Opcional: mostre o caractere localmente também
-            ui->plainTextEdit->insertPlainText(text);
-
-            // Impede o processamento padrão para evitar duplicação
-            event->accept();
-            return;
-        }
-
-        // Trate teclas especiais (como Enter)
-        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
-            m_serial->sendData("\r\n");  // Envia quebra de linha
-            ui->plainTextEdit->insertPlainText("\n");  // Mostra localmente
-            event->accept();
-            return;
-        }
-    }
     // Ou envie o texto para o terminal
     if (event->key() >= Qt::Key_Space && event->key() <= Qt::Key_ydiaeresis) {
         ui->plainTextEdit->insertPlainText(event->text());
@@ -305,7 +250,9 @@ void PdTermMainTerminal::limparTexto() {
 //*******************************************************************************************
 void PdTermMainTerminal::onSerialDataReceived(const QByteArray &data)
 {
-    appendTerminalText(QString::fromUtf8(data), Qt::green);
+    if( flag_from_serial_write_to_terminal ){
+        appendTerminalText(QString::fromUtf8(data), Qt::green);
+    }
 }
 
 void PdTermMainTerminal::onSerialError(const QString &error)

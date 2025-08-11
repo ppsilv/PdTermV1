@@ -7,6 +7,7 @@
  */
 
 #include "pdtermserial.h"
+#include "pdtermxmodem.h"
 #include "worker.h"
 
 QT_BEGIN_NAMESPACE
@@ -25,6 +26,8 @@ public:
     void setTextAtPosition(int row, int col, const QString &text, const QColor &color = Qt::green);
     void ensureLineExists(int row);  // Novo método auxiliar
     bool eventFilter(QObject *obj, QEvent *event) override;
+    bool flag_from_serial_write_to_terminal;
+    bool flag_from_terminal_write_to_serial;
 
 public slots:
     void appendTerminalText(const QString &text, const QColor &color = Qt::green, bool newLine = true);
