@@ -39,4 +39,16 @@
 
 # debug information files
 *.dwo
+
+# Builds
 build/
+build-*/
+
+# Arquivos do Qt
+*.pro.user
+*.autosave
+
+# Outros arquivos temporários
+*.o
+*.a
+
