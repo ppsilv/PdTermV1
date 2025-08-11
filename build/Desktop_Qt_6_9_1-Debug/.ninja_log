@@ -40,3 +40,14 @@
 33	3410	1754952192821399367	CMakeFiles/PdTermV1.dir/pdtermxmodem.cpp.o	e17ce92c66da89dd
 33	4606	1754952194006406176	CMakeFiles/PdTermV1.dir/PdTermmainterminal.cpp.o	c613f97ad7062709
 4606	5145	1754952194564409382	PdTermV1	fbac99856fa174f5
+14	34	1748445343000000000	PdTermV1_autogen/timestamp	1d84f610ac3451ab
+14	34	1748445343000000000	PdTermV1_autogen/mocs_compilation.cpp	1d84f610ac3451ab
+14	34	1748445343000000000	/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/PdTermV1_autogen/timestamp	1d84f610ac3451ab
+14	34	1748445343000000000	/home/pdsilva/QT/PdTermV1/build/Desktop_Qt_6_9_1-Debug/PdTermV1_autogen/mocs_compilation.cpp	1d84f610ac3451ab
+35	49	1754952674370139118	CMakeFiles/PdTermV1.dir/worker.cpp.o	20282ead38bf5762
+35	51	1754952674373139135	CMakeFiles/PdTermV1.dir/pdtermxmodem.cpp.o	e17ce92c66da89dd
+35	53	1754952674374139141	CMakeFiles/PdTermV1.dir/PdTermmainterminal.cpp.o	c613f97ad7062709
+34	53	1754952674375139147	CMakeFiles/PdTermV1.dir/PdTermV1_autogen/mocs_compilation.cpp.o	a2cdb2233e279d7d
+34	54	1754952674374139141	CMakeFiles/PdTermV1.dir/main.cpp.o	bf4626fa2452bcb9
+35	54	1754952674375139147	CMakeFiles/PdTermV1.dir/pdtermserial.cpp.o	b8c1490020e24b8f
+54	590	1754952674907142152	PdTermV1	fbac99856fa174f5
