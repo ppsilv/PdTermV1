@@ -94,8 +94,6 @@ void PdTermXmodem::enviarArquivoXmodem()
         emit erroOcorreu("Timeout aguardando NACK");
         return;
     }
-    qDebug() << "Retornando.....";
-    return;
 
     // 4. Protocolo Xmodem
     const int BLOCK_SIZE = 128;
@@ -124,7 +122,7 @@ void PdTermXmodem::enviarArquivoXmodem()
         block.append(checksum);
 
         // Enviar bloco
-        envia_dados_serial(nullptr,block);
+        enviarDados(block);
 
         // Aguardar ACK (0x06) ou NACK (0x15)
         char resposta = 0;
