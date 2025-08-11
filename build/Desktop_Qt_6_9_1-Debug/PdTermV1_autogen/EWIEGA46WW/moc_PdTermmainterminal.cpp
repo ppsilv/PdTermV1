@@ -55,7 +55,13 @@ template <> constexpr inline auto PdTermMainTerminal::qt_create_metaobjectdata<q
         "onSerialStatusChanged",
         "status",
         "on_actionSerialSettings",
-        "testeTelaTerminal"
+        "testeTelaTerminal",
+        "onTransmissaoCancelada",
+        "onTransmissaoConcluida",
+        "onErroOcorreu",
+        "mensagem",
+        "onProgressoAtualizado",
+        "porcentagem"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -93,6 +99,18 @@ template <> constexpr inline auto PdTermMainTerminal::qt_create_metaobjectdata<q
         QtMocHelpers::SlotData<void()>(16, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'testeTelaTerminal'
         QtMocHelpers::SlotData<void()>(17, 2, QMC::AccessPublic, QMetaType::Void),
+        // Slot 'onTransmissaoCancelada'
+        QtMocHelpers::SlotData<void()>(18, 2, QMC::AccessPublic, QMetaType::Void),
+        // Slot 'onTransmissaoConcluida'
+        QtMocHelpers::SlotData<void()>(19, 2, QMC::AccessPublic, QMetaType::Void),
+        // Slot 'onErroOcorreu'
+        QtMocHelpers::SlotData<void(const QString &)>(20, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 21 },
+        }}),
+        // Slot 'onProgressoAtualizado'
+        QtMocHelpers::SlotData<void(int)>(22, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::Int, 23 },
+        }}),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -126,6 +144,10 @@ void PdTermMainTerminal::qt_static_metacall(QObject *_o, QMetaObject::Call _c, i
         case 7: _t->onSerialStatusChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         case 8: _t->on_actionSerialSettings(); break;
         case 9: _t->testeTelaTerminal(); break;
+        case 10: _t->onTransmissaoCancelada(); break;
+        case 11: _t->onTransmissaoConcluida(); break;
+        case 12: _t->onErroOcorreu((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 13: _t->onProgressoAtualizado((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
         default: ;
         }
     }
@@ -150,14 +172,14 @@ int PdTermMainTerminal::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 14)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 14;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 14)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 10;
+        _id -= 14;
     }
     return _id;
 }

@@ -14,11 +14,14 @@
 #include <QFormLayout>
 #include <QDialogButtonBox>
 
+
 PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PdTermMainTerminal)
     , m_worker(new Worker)
     , m_thread(new QThread(this))
+    , m_serial(new PdTermSerial(this))
+    , m_xmodem(new PdTermXmodem(this))
 {
     ui->setupUi(this);
     // Adicione isto para habilitar leitura de teclas:
@@ -29,14 +32,35 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     flag_from_serial_write_to_terminal = true;
     flag_from_terminal_write_to_serial = true;
 
+    //***********************************************************************************
+    // XMODEM
+    progressBar = new QProgressBar(this);
+    // Configurações visuais (opcional)
+    progressBar->setTextVisible(false); // Oculta o texto percentual
+    progressBar->setFixedWidth(200);    // Largura fixa
+    progressBar->setFixedHeight(15);    // Altura menor que a statusbar
 
+    // Adiciona à statusbar (à direita, por exemplo)
+    ui->statusbar->addPermanentWidget(progressBar, 0); // O '0' evita que ela se expanda
+    m_xmodem->envia_dados_serial = [](const QByteArray &data) {
+        // Implementação do envio serial
+    };
+    m_xmodem->recebe_dados_serial = [](int timeout_ms) -> QByteArray {
+        QByteArray dadosRecebidos;
+        // Implementação da recepção serial com timeout
+        return dadosRecebidos;
+    };
+    setupXmodemSignals();
+
+    //***********************************************************************************
+    // SERIAL
     // Agora inicialize o serial
-    m_serial = new PdTermSerial(this);
-
+    //m_serial = new PdTermSerial(this);
     // Configurações iniciais Serial
-    setupSerial();
+    setupSerialSignals();
     setup_ui();
     setup_connect();
+
 
     if (!layout) {
         layout = new QVBoxLayout(this); // Cria um novo se não houver
@@ -153,6 +177,15 @@ bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
     }
     return QObject::eventFilter(obj, event);
 }
+QString PdTermMainTerminal::openFileXmodem()
+{
+    QString filePath = QFileDialog::getOpenFileName(this,
+                                                    tr("Open File"),
+                                                    QDir::homePath(), // Start in the user's home directory
+                                                    tr("Text files (*.txt);;All files (*.*)"));
+
+    return filePath;
+}
 void PdTermMainTerminal::testeTelaTerminal()
 {
     // Exemplo 1: Texto verde padrão (com quebra de linha)
@@ -245,9 +278,58 @@ void PdTermMainTerminal::keyPressEvent_old(QKeyEvent *event) {
 void PdTermMainTerminal::limparTexto() {
     ui->plainTextEdit->clear();  // Limpa todo o conteúdo do QPlainTextEdit
 }
+
+//*******************************************************************************************
+//*************************************ON XMODEM************************************************
+//*******************************************************************************************
+void PdTermMainTerminal::setupXmodemSignals(){
+    // Conectando os signals aos slots
+    connect(ui->action_Enviar_arquivo, &QAction::triggered, this, [this]() {
+        m_xmodem->enviarArquivoXmodem();
+    });
+    connect(m_xmodem, &PdTermXmodem::transmissaoCancelada, this, &PdTermMainTerminal::onTransmissaoCancelada);
+    connect(m_xmodem, &PdTermXmodem::transmissaoConcluida, this, &PdTermMainTerminal::onTransmissaoConcluida);
+    connect(m_xmodem, &PdTermXmodem::erroOcorreu,          this, &PdTermMainTerminal::onErroOcorreu);
+    connect(m_xmodem, &PdTermXmodem::progressoAtualizado,  progressBar, &QProgressBar::setValue);
+
+}
+void PdTermMainTerminal::onTransmissaoCancelada(){
+    qDebug() << "[INOF]-Transmissão cancelada pelo usuário";
+    QMessageBox::information(this, "Xmodem", "Transmissão cancelada");
+}
+
+void PdTermMainTerminal::onTransmissaoConcluida() {
+    qDebug() << "Transmissão concluída com sucesso!";
+    QMessageBox::information(this, "Xmodem", "Arquivo enviado com sucesso!");
+}
+
+void PdTermMainTerminal::onErroOcorreu(const QString &mensagem) {
+    qDebug() << "Erro na transmissão:" << mensagem;
+    QMessageBox::critical(this, "Erro Xmodem", mensagem);
+}
+
+void PdTermMainTerminal::onProgressoAtualizado(int porcentagem) {
+    qDebug() << "Progresso:" << porcentagem << "%";
+    // Atualiza uma barra de progresso na UI, se existir
+    progressBar->setValue(porcentagem);
+}
+//*******************************************************************************************
+//*************************************XMODEM************************************************
+//*******************************************************************************************
+
 //*******************************************************************************************
 //*******************************ON    SERIAL************************************************
 //*******************************************************************************************
+void PdTermMainTerminal::setupSerialSignals()
+{
+    connect(m_serial, &PdTermSerial::dataReceived,this, &PdTermMainTerminal::onSerialDataReceived);
+    connect(m_serial, &PdTermSerial::errorOccurred,this, &PdTermMainTerminal::onSerialError);
+    connect(m_serial, &PdTermSerial::statusChanged,this, &PdTermMainTerminal::onSerialStatusChanged);
+
+    // Configuração inicial padrão
+    m_serial->setBaudRate(115200);  // Baud rate padrão
+}
+
 void PdTermMainTerminal::onSerialDataReceived(const QByteArray &data)
 {
     if( flag_from_serial_write_to_terminal ){
@@ -266,19 +348,6 @@ void PdTermMainTerminal::onSerialStatusChanged(const QString &status)
     statusBar()->showMessage(status);
     //appendTerminalText("[STATUS] " + status, Qt::blue);
     //statusBar()->setText(status);
-}
-
-//*******************************************************************************************
-//*************************************SERIAL************************************************
-//*******************************************************************************************
-void PdTermMainTerminal::setupSerial()
-{
-    connect(m_serial, &PdTermSerial::dataReceived,this, &PdTermMainTerminal::onSerialDataReceived);
-    connect(m_serial, &PdTermSerial::errorOccurred,this, &PdTermMainTerminal::onSerialError);
-    connect(m_serial, &PdTermSerial::statusChanged,this, &PdTermMainTerminal::onSerialStatusChanged);
-
-    // Configuração inicial padrão
-    m_serial->setBaudRate(115200);  // Baud rate padrão
 }
 
 void PdTermMainTerminal::setup_ui(){
@@ -343,6 +412,7 @@ void PdTermMainTerminal::on_actionSerialSettings()
 }
 
 //*******************************************************************************************
+//*********************************END SERIAL************************************************
 //*******************************************************************************************
 
 

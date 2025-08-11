@@ -2,6 +2,7 @@
 #define PGTERMMAINTERMINAL_H
 
 #include <QMainWindow>
+#include <QProgressBar>
 /*
  * pdtermmainterminal.h
  */
@@ -28,6 +29,7 @@ public:
     bool eventFilter(QObject *obj, QEvent *event) override;
     bool flag_from_serial_write_to_terminal;
     bool flag_from_terminal_write_to_serial;
+    QString openFileXmodem();
 
 public slots:
     void appendTerminalText(const QString &text, const QColor &color = Qt::green, bool newLine = true);
@@ -39,16 +41,26 @@ public slots:
     void onSerialStatusChanged(const QString &status);
     void on_actionSerialSettings();
     void testeTelaTerminal();
+    void onTransmissaoCancelada();
+    void onTransmissaoConcluida();
+    void onErroOcorreu(const QString &mensagem);
+    void onProgressoAtualizado(int porcentagem);
 
 private:
+    QProgressBar *progressBar;
     Ui::PdTermMainTerminal *ui;
     Worker *m_worker;
     QThread *m_thread;
     PdTermSerial *m_serial;
-    void setupSerial();
+    PdTermXmodem *m_xmodem;
+    void setupXmodemSignals();
+    void setupSerialSignals();
 
     //Metodo
     void setup_ui();
     void setup_connect();
 };
 #endif // PGTERMMAINTERMINAL_H
+
+
+
