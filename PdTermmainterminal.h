@@ -31,6 +31,8 @@ public:
     bool flag_from_serial_write_to_terminal;
     bool flag_from_terminal_write_to_serial;
     QString openFileXmodem();
+    void setSerialDiretion();
+    void resetSerialDiretion();
 
 
 public slots:
@@ -60,6 +62,7 @@ private:
 
     QByteArray receiveSerialData(int timeout_ms);
     void sendSerialData(const QByteArray& data);
+    void setFlagSerial(bool flag);
 
     //Metodo
     void setup_ui();

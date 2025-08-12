@@ -86,27 +86,33 @@ void PdTermXmodem::enviarArquivoXmodem()
 
     printFile(fileData);
 
+    setFlag(false);
     // 2. Iniciar transferência enviando 0x33 (ASCII #3)
     enviarDados(QByteArray(1, 0x33));
 
     // 3. Aguardar NACK (0x15)
     if (!esperarPorByte(0x15)) {
         emit erroOcorreu("Timeout aguardando NACK");
+        setFlag(true);
         return;
     }
 
+    QThread::sleep(1);
     // 4. Protocolo Xmodem
     const int BLOCK_SIZE = 128;
     int blockNumber = 1;
     int bytesSent = 0;
     bool cancelado = false;
-
+    qDebug() << "Entrando no loop...";
     while (bytesSent < fileData.size() && !cancelado) {
         // Preparar bloco
         QByteArray block;
         block.append(0x01); // SOH
         block.append(blockNumber); // Número do bloco
         block.append(255 - blockNumber); // Complemento do número do bloco
+
+        qDebug() << "Enviando block [" << blockNumber << "] ";
+
 
         // Dados (128 bytes)
         int bytesToCopy = qMin(BLOCK_SIZE, fileData.size() - bytesSent);
@@ -121,14 +127,25 @@ void PdTermXmodem::enviarArquivoXmodem()
         char checksum = calcularChecksum(block.mid(3, BLOCK_SIZE));
         block.append(checksum);
 
+        qDebug()<< "Vou enviar agora o block ["<< blockNumber << "] ";
+        printFile(block);
         // Enviar bloco
-        enviarDados(block);
+        //enviarDados(block);
+
+        for (int i = 0; i < block.size(); ++i) {
+            enviarDados(QByteArray(1, block.at(i)));  // ✅ Forma ideal
+            //qDebug() << "Env: "<< block.at(i);
+            QThread::msleep(1);
+        }
 
         // Aguardar ACK (0x06) ou NACK (0x15)
         char resposta = 0;
+        qDebug()<< "Vou aguardar 0x06 (ACK)";
         if (!esperarPorByte(0x06, 10000)) { // Timeout de 10s para ACK
+            qDebug()<< "Vou aguardar 0x15 (NACK)";
             if (!esperarPorByte(0x15)) {
                 emit erroOcorreu("Falha na transferência");
+                setFlag(true);
                 return;
             }
             // NACK recebido, reenviar bloco
@@ -138,16 +155,18 @@ void PdTermXmodem::enviarArquivoXmodem()
         // Atualizar progresso
         bytesSent += bytesToCopy;
         int progresso = (bytesSent * 100) / fileData.size();
-        emit progressoAtualizado(progresso);
+        //emit progressoAtualizado(progresso);
 
         blockNumber++;
         if (blockNumber > 255) blockNumber = 1;
     }
+    qDebug() << "Terminando enviando EOT";
     // 5. Enviar EOT (0x04) para finalizar
-    enviarDados(QByteArray(1, 0x33));
+    enviarDados(QByteArray(1, 0x04));
 
     // 6. Concluir
     emit transmissaoConcluida();
+    setFlag(true);
 
 }
 
@@ -163,7 +182,7 @@ bool PdTermXmodem::esperarPorByte(char byteEsperado, int timeout_ms) {
 
     while (!timer.hasExpired(timeout_ms)) {
         QByteArray resposta = recebe_dados_serial(io_context, 100);
-
+        //qDebug()<< "Dados recebido [" << resposta << "] ";
         if (!resposta.isEmpty()) {
             qDebug() << "Byte recebido:" << resposta.toHex();
             if (resposta.contains(byteEsperado)) {

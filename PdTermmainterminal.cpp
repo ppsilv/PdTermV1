@@ -74,6 +74,10 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
         static_cast<PdTermMainTerminal*>(ctx)->sendSerialData(data);
     };
 
+    m_xmodem->set_envia_flag_serial = [](void* ctx, bool flag) {
+        static_cast<PdTermMainTerminal*>(ctx)->setFlagSerial(flag);
+    };
+
     setupXmodemSignals();
 
     //***********************************************************************************
@@ -344,6 +348,15 @@ void PdTermMainTerminal::onProgressoAtualizado(int porcentagem) {
     );
     progressBar->setValue(porcentagem);
 }
+void PdTermMainTerminal::setSerialDiretion(){
+    flag_from_serial_write_to_terminal = true;
+    flag_from_terminal_write_to_serial = true;
+}
+
+void PdTermMainTerminal::resetSerialDiretion(){
+    flag_from_serial_write_to_terminal = false;
+    flag_from_terminal_write_to_serial = false;
+}
 
 QByteArray PdTermMainTerminal::receiveSerialData(int timeout_ms) {
     return m_serial->waitForData(timeout_ms);
@@ -351,6 +364,16 @@ QByteArray PdTermMainTerminal::receiveSerialData(int timeout_ms) {
 
 void PdTermMainTerminal::sendSerialData(const QByteArray& data) {
     m_serial->sendData(data); // Seu método existente
+}
+
+void PdTermMainTerminal::setFlagSerial(bool flag) {
+    if( flag ){
+        flag_from_serial_write_to_terminal = true;
+        flag_from_terminal_write_to_serial = true;
+    }else{
+        flag_from_serial_write_to_terminal = false;
+        flag_from_terminal_write_to_serial = false;
+    }
 }
 //*******************************************************************************************
 //*************************************XMODEM************************************************
