@@ -84,8 +84,9 @@ void PdTermXmodem::enviarArquivoXmodem()
         return;
     }
 
-    printFile(fileData);
+    //printFile(fileData);
 
+    //Set the input directions to xmodem
     setFlag(false);
     QByteArray resposta = recebe_dados_serial(io_context, 1000);
 
@@ -106,9 +107,7 @@ void PdTermXmodem::enviarArquivoXmodem()
     int bytesSent = 0;
     bool cancelado = false;
 
-    //    while (bytesSent < fileData.size() && !cancelado) {
-
-    {
+    while (bytesSent < fileData.size() && !cancelado) {
         // Preparar bloco
         QByteArray block;
         block.append(0x01); // SOH
@@ -134,7 +133,6 @@ void PdTermXmodem::enviarArquivoXmodem()
         // Enviar bloco
         //enviarDados(block);
 
-
         for (int i = 0; i < block.size(); ++i) {
             enviarDados(QByteArray(1, block.at(i)));  // ✅ Forma ideal
             //qDebug() << "Env: "<< block.at(i);
@@ -152,7 +150,7 @@ void PdTermXmodem::enviarArquivoXmodem()
                 return;
             }
             // NACK recebido, reenviar bloco
-            //continue;
+            continue;
         }
 
         // Atualizar progresso
