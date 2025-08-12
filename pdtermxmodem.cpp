@@ -106,9 +106,9 @@ void PdTermXmodem::enviarArquivoXmodem()
     int bytesSent = 0;
     bool cancelado = false;
 
-//    while (bytesSent < fileData.size() && !cancelado) {
+    //    while (bytesSent < fileData.size() && !cancelado) {
 
-        {
+    {
         // Preparar bloco
         QByteArray block;
         block.append(0x01); // SOH
@@ -138,7 +138,7 @@ void PdTermXmodem::enviarArquivoXmodem()
         for (int i = 0; i < block.size(); ++i) {
             enviarDados(QByteArray(1, block.at(i)));  // ✅ Forma ideal
             //qDebug() << "Env: "<< block.at(i);
-            QThread::msleep(50);
+            QThread::msleep(1);
         }
 
         // Aguardar ACK (0x06) ou NACK (0x15)
