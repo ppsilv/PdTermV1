@@ -100,7 +100,7 @@ void PdTermXmodem::enviarArquivoXmodem()
         return;
     }
 
-    QThread::sleep(1);
+
     // 4. Protocolo Xmodem
     const int BLOCK_SIZE = 128;
     int blockNumber = 1;
