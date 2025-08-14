@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/icons"/>
+    <qresource prefix="/">
+        <file>icons/pdtermv2.svg</file>
+        <file>icons/pdtermv1.svg</file>
+    </qresource>
+</RCC>

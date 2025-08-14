@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PdTermV1
+Comment=Terminal do pdsilva
+Categories=Development;
+Exec=/usr/bin/pdtermv1
+Icon=/usr/share/pdtermV1/pdtermv1.svg
+StartupWMClass=_pn

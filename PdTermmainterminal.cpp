@@ -23,6 +23,8 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     , m_serial(new PdTermSerial(this))
     , m_xmodem(new PdTermXmodem(this))
 {
+    this->setWindowTitle("PdTermV1");
+    this->setWindowIcon(QIcon(":icons/pdtermv2.svg"));
     ui->setupUi(this);
     // Adicione isto para habilitar leitura de teclas:
     this->setFocusPolicy(Qt::StrongFocus);

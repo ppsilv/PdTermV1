@@ -11,7 +11,21 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>PdTermMainTerminal</string>
+   <string>PdTermV1</string>
+  </property>
+  <property name="windowIcon">
+   <iconset theme="QIcon::ThemeIcon::SoftwareUpdateAvailable" resource="icons.qrc">
+    <normaloff>:/icons/pdtermv1.svg</normaloff>
+    <normalon>:/icons/pdtermv2.svg</normalon>
+    <disabledoff>:/icons/pdtermv1.svg</disabledoff>
+    <disabledon>:/icons/pdtermv2.svg</disabledon>
+    <activeoff>:/icons/pdtermv1.svg</activeoff>
+    <activeon>:/icons/pdtermv2.svg</activeon>
+    <selectedoff>:/icons/pdtermv1.svg</selectedoff>
+    <selectedon>:/icons/pdtermv2.svg</selectedon>:/icons/pdtermv1.svg</iconset>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPlainTextEdit" name="plainTextEdit">
@@ -165,6 +179,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>
