@@ -44,6 +44,12 @@ signals:
     void progressoAtualizado(int porcentagem);
 
 private:
+    int reenvio;
+    int total_envios;
+    int total_blocos;
+    int total_blocos_reenviados;
+
+    int esperarAckNack(int timeout_ms);
     bool esperarPorByte(char byteEsperado, int timeout_ms = 3000);
     char calcularChecksum(const QByteArray &dados);
     void printFile( QByteArray fileContent );

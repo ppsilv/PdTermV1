@@ -22,6 +22,7 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     , m_thread(new QThread(this))
     , m_serial(new PdTermSerial(this))
     , m_xmodem(new PdTermXmodem(this))
+    , m_control(new PdTerminalControl(this))
 {
     this->setWindowTitle("PdTermV1");
     this->setWindowIcon(QIcon(":icons/pdtermv2.svg"));
@@ -33,6 +34,10 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
 
     flag_from_serial_write_to_terminal = true;
     flag_from_terminal_write_to_serial = true;
+    flag_from_serial_write_to_VT100 = false;
+
+    cor = Qt::green;
+    this->flagsetBold = false;
 
     //***********************************************************************************
     // XMODEM
@@ -155,6 +160,39 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     ui->plainTextEdit->setFocus();
     // No construtor da MainWindow:
     ui->plainTextEdit->installEventFilter(this);
+/*
+    setTextAtPosition(5, 0, "2. Conectar ao banco", Qt::white);
+
+    // Exemplo 1: Texto verde padrão (com quebra de linha)
+    appendTerminalText("$ Usuário logado.");
+
+
+    setTextAtPosition(12, 10, "linha 12");
+
+    appendTerminalText("Usuário logado.");
+
+
+    // Exemplo 1: Escrever "Hello" na linha 5, coluna 10 (verde padrão)
+    setCursorPosition(20, 10);
+    writeTerminal("TEXTO not BOLD na linha 20");
+
+    cor = Qt::red;
+    this->flagsetBold = false;
+    setCursorPosition(10,30);
+    writeTerminal("Texto deveria aparecer em vermelho na lina 10");
+    this->flagsetBold = true;
+    setCursorPosition(11,30);
+    writeTerminal("Texto deveria aparecer em vermelho bold na lina 11");
+
+    cor = Qt::yellow;
+    setCursorPosition(22, 10);
+    writeTerminal("texto cor yellow ");
+    cor = Qt::blue;
+    setCursorPosition(15, 15);
+    writeTerminal("TEXTO AZUL E BOLD na linha 15");
+    cor = Qt::green;
+*/
+
 }
 
 PdTermMainTerminal::~PdTermMainTerminal()
@@ -217,96 +255,87 @@ QString PdTermMainTerminal::openFileXmodem()
 }
 void PdTermMainTerminal::testeTelaTerminal()
 {
-    // Exemplo 1: Texto verde padrão (com quebra de linha)
     appendTerminalText("$ Usuário logado.");
-    // Exemplo 2: Texto vermelho (sem quebra de linha)
     appendTerminalText("ERRO: ", Qt::red, false);
     appendTerminalText("Falha na conexão.", Qt::red);
-    // Exemplo 3: Texto personalizado (laranja)
     appendTerminalText("Alerta: ", QColor(255, 165, 0), false);
     appendTerminalText("Temperatura crítica.", QColor(255, 165, 0));
-
-    // Exemplo 1: Escrever "Hello" na linha 5, coluna 10 (verde padrão)
     setTextAtPosition(12, 10, "Hello");
-
-    // Exemplo 2: Escrever "Error" na linha 3, coluna 0 (vermelho)
     setTextAtPosition(13, 25, "Error", Qt::red);
-
-    // Exemplo 3: Sobrescrever parte de uma linha
-    setTextAtPosition(14, 50, "Status: OK");  // Linha 0, coluna 0
     setTextAtPosition(15, 60, "FAIL", Qt::red);  // Altera "OK" para "FAIL"
-
-
-    // Exemplo 1: Escrever "Hello" na linha 5, coluna 10 (verde padrão)
     setTextAtPosition(19, 10, "Hello");
-
-    // Exemplo 2: Escrever "Error" na linha 3, coluna 0 (vermelho)
     setTextAtPosition(18, 25, "Error", Qt::red);
-
-    // Exemplo 3: Sobrescrever parte de uma linha
     setTextAtPosition(17, 50, "Status: OK");  // Linha 0, coluna 0
     setTextAtPosition(16, 60, "FAIL", Qt::red);  // Altera "OK" para "FAIL"
-
-
     // Cabeçalho estilizado
     setTextAtPosition(0, 0, "┌──────────────────────────────┐ ", Qt::cyan);
     setTextAtPosition(1, 0, "│   MEU TERMINAL CUSTOMIZADO   │ ", Qt::yellow);
     setTextAtPosition(2, 0, "└──────────────────────────────┘ ", Qt::cyan);
-
     // Menu interativo
     setTextAtPosition(4, 0, "1. Iniciar servidor", Qt::green);
     setTextAtPosition(5, 0, "2. Conectar ao banco", Qt::white);
-
-    // Exemplo 1: Texto verde padrão (com quebra de linha)
-    appendTerminalText("$ Usuário logado.");
-    // Exemplo 2: Texto vermelho (sem quebra de linha)
-    appendTerminalText("ERRO: ", Qt::red, false);
-    appendTerminalText("Falha na conexão.", Qt::red);
-    // Exemplo 3: Texto personalizado (laranja)
-    appendTerminalText("Alerta: ", QColor(255, 165, 0), false);
-    appendTerminalText("Temperatura crítica.", QColor(255, 165, 0));
-
-
 }
-void PdTermMainTerminal::keyPressEvent_old(QKeyEvent *event) {
-    qDebug() << "Tecla pressionada:" << event->text();
 
-
-    // Exemplo: Ctrl+L para limpar
-    if (event->modifiers() & Qt::ControlModifier && event->key() == Qt::Key_L) {
-        ui->plainTextEdit->clear();
-    }
-    if (event->modifiers() & Qt::ControlModifier && event->key() == Qt::Key_S) {
-        ui->plainTextEdit->clear();
-        event->accept();  // ⭐ Importante!
-    }
-    if (event->modifiers() & Qt::ControlModifier && event->key() == Qt::Key_U) {
-        ui->plainTextEdit->clear();
-        event->accept();  // ⭐ Importante!
-    }
-    if (event->modifiers() & Qt::ControlModifier && event->key() == Qt::Key_Y) {
-        ui->plainTextEdit->clear();
-    }
-
-    // Exemplo: Ctrl+Q para terminar
-    if (event->modifiers() & Qt::ControlModifier && event->key() == Qt::Key_Q) {
-        this->close();
-        event->accept();  // ⭐ Importante!
-    } else {
-        event->ignore();
-    }
-
-    // Ou envie o texto para o terminal
-    if (event->key() >= Qt::Key_Space && event->key() <= Qt::Key_ydiaeresis) {
-        ui->plainTextEdit->insertPlainText(event->text());
-    }
-
-    QMainWindow::keyPressEvent(event);  // Mantenha o comportamento padrão
-}
 
 void PdTermMainTerminal::limparTexto() {
     ui->plainTextEdit->clear();  // Limpa todo o conteúdo do QPlainTextEdit
 }
+//*******************************************************************************************
+//*************************************ON CONTROL********************************************
+//*******************************************************************************************
+void PdTermMainTerminal::setupControlSignals(){
+    // Conectar sinais aos slots apropriados
+    connect(m_control, &PdTerminalControl::clearScreen, this, &PdTermMainTerminal::clearScreen);
+    connect(m_control, &PdTerminalControl::setCursorPosition, this, &PdTermMainTerminal::setCursorPosition);
+    connect(m_control, &PdTerminalControl::setTextColor, this, &PdTermMainTerminal::setTextColor);
+    connect(m_control, &PdTerminalControl::setBold, this, &PdTermMainTerminal::setBold);
+    connect(m_control, &PdTerminalControl::unknownSequence, this, &PdTermMainTerminal::unknownSequence);
+}
+void PdTermMainTerminal::setTextColor(int color){
+    cor = color;
+}
+
+void PdTermMainTerminal::setBold(bool enabled){
+    this->flagsetBold = enabled;
+}
+
+void PdTermMainTerminal::unknownSequence(const QByteArray &seq){
+    qDebug() << "Control sequence unknown "<<seq;
+}
+void PdTermMainTerminal::clearScreen(){
+    ui->plainTextEdit->clear();
+}
+
+void PdTermMainTerminal::setCursorPosition(int row, int col){
+    setTextAtPosition(row, col, "");
+}
+
+void PdTermMainTerminal::writeTerminal(const QString &mensagem, bool newline){
+    if(flag_from_serial_write_to_VT100 == true){
+        m_control->processData(QByteArray(mensagem.toUtf8()));
+    }
+    if(this->flagsetBold == true){
+        QTextCharFormat boldFormat;
+        boldFormat.setForeground(cor);
+        boldFormat.setFontWeight(QFont::ExtraBold);
+        ui->plainTextEdit->textCursor().insertText(mensagem, boldFormat);
+        this->flagsetBold = false;
+    }else{
+        if (mensagem.contains("\x1B[2J")) {
+            qDebug() << "Sequência de limpeza encontrada!";
+            this->ui->plainTextEdit->clear();
+            QString substring = mensagem.mid(4);
+            this->appendTerminalText(substring, cor , newline);
+        }else if(mensagem.contains("\x1B[")){
+            flag_from_serial_write_to_VT100 = true;
+        }else{
+            this->appendTerminalText(mensagem, cor , newline);
+        }
+    }
+}
+//*******************************************************************************************
+//*************************************CONTROL **********************************************
+//*******************************************************************************************
 
 //*******************************************************************************************
 //*************************************ON XMODEM************************************************
@@ -350,15 +379,6 @@ void PdTermMainTerminal::onProgressoAtualizado(int porcentagem) {
     );
     progressBar->setValue(porcentagem);
 }
-void PdTermMainTerminal::setSerialDiretion(){
-    flag_from_serial_write_to_terminal = true;
-    flag_from_terminal_write_to_serial = true;
-}
-
-void PdTermMainTerminal::resetSerialDiretion(){
-    flag_from_serial_write_to_terminal = false;
-    flag_from_terminal_write_to_serial = false;
-}
 
 QByteArray PdTermMainTerminal::receiveSerialData(int timeout_ms) {
     return m_serial->waitForData(timeout_ms);
@@ -397,7 +417,8 @@ void PdTermMainTerminal::setupSerialSignals()
 void PdTermMainTerminal::onSerialDataReceived(const QByteArray &data)
 {
     if( flag_from_serial_write_to_terminal ){
-        appendTerminalText(QString::fromUtf8(data), Qt::green);
+        //appendTerminalText(QString::fromUtf8(data), Qt::green);
+        writeTerminal(QString::fromUtf8(data));
     }
 }
 

@@ -10,7 +10,11 @@
 
 
 PdTermXmodem::PdTermXmodem(QObject *parent): QObject{parent}
-{}
+{
+    total_envios=0;
+    total_blocos=0;
+    total_blocos_reenviados=0;
+}
 
 void PdTermXmodem::printFile( QByteArray fileData )
 {
@@ -106,6 +110,9 @@ void PdTermXmodem::enviarArquivoXmodem()
     int blockNumber = 1;
     int bytesSent = 0;
     bool cancelado = false;
+    total_envios=0;
+    total_blocos_reenviados=0;
+    reenvio=0;
 
     while (bytesSent < fileData.size() && !cancelado) {
         // Preparar bloco
@@ -140,18 +147,38 @@ void PdTermXmodem::enviarArquivoXmodem()
         }
 
         // Aguardar ACK (0x06) ou NACK (0x15)
+        total_envios++;
         char resposta = 0;
-        qDebug()<< "Vou aguardar 0x06 (ACK)";
-        if (!esperarPorByte(0x06, 10000)) { // Timeout de 10s para ACK
-            qDebug()<< "Vou aguardar 0x15 (NACK)";
-            if (!esperarPorByte(0x15)) {
+        qDebug()<< "Aguardando 0x06 (ACK)";
+        int answer= esperarAckNack(1000);
+        if( answer == 2 ){
+            total_blocos_reenviados++;
+            reenvio++;
+            if ( reenvio == 5 ){
                 emit erroOcorreu("Falha na transferência");
                 setFlag(true);
                 return;
             }
-            // NACK recebido, reenviar bloco
             continue;
         }
+        reenvio=0;
+        if( answer == 0 ){
+            emit erroOcorreu("Falha na transferência");
+            setFlag(true);
+            return;
+        }
+        qDebug() << "Block " << blockNumber << " recebido com sucesso";
+
+       // if (!esperarPorByte(0x06, 10000)) { // Timeout de 10s para ACK
+       //     qDebug()<< "Vou aguardar 0x15 (NACK)";
+       //     if (!esperarPorByte(0x15)) {
+       //         emit erroOcorreu("Falha na transferência");
+       //         setFlag(true);
+       //         return;
+       //     }
+       //     // NACK recebido, reenviar bloco
+       //     continue;
+       // }
 
         // Atualizar progresso
         bytesSent += bytesToCopy;
@@ -159,6 +186,7 @@ void PdTermXmodem::enviarArquivoXmodem()
         //emit progressoAtualizado(progresso);
 
         blockNumber++;
+
         if (blockNumber > 255) blockNumber = 1;
     }
     qDebug() << "Terminando enviando EOT";
@@ -168,7 +196,10 @@ void PdTermXmodem::enviarArquivoXmodem()
     // 6. Concluir
     emit transmissaoConcluida();
     setFlag(true);
-
+    total_blocos=blockNumber-1;
+    qDebug() << "Total blocos do arquivo: "<<total_blocos;
+    qDebug() << "Total blocos reenviados: "<<total_blocos_reenviados;
+    qDebug() << "Total blocos   enviados: "<<total_envios;
 }
 
 bool PdTermXmodem::esperarPorByte(char byteEsperado, int timeout_ms) {
@@ -190,13 +221,45 @@ bool PdTermXmodem::esperarPorByte(char byteEsperado, int timeout_ms) {
                 return true;
             }
         }
+        QCoreApplication::processEvents(); // Mantém a UI responsiva
+        QThread::msleep(50);
+    }
+    qWarning() << "Timeout esperando pelo byte" << QString::number(byteEsperado, 16);
+    return false;
+}
+
+int PdTermXmodem::esperarAckNack(int timeout_ms) {
+    // Verificações iniciais
+    if (!recebe_dados_serial || !io_context) {
+        qCritical() << "Recepção não inicializada!";
+        return false;
+    }
+
+    QElapsedTimer timer;
+    timer.start();
+
+    while (!timer.hasExpired(timeout_ms)) {
+        QByteArray resposta = recebe_dados_serial(io_context, 100);
+        //qDebug()<< "Dados recebido [" << resposta << "] ";
+        if (!resposta.isEmpty()) {
+            //qDebug() << "Byte recebido:" << resposta.toHex();
+            if (resposta.contains(0x06)) {
+                //qDebug()<< "Recebido 06";
+                return 1;
+            }
+            if (resposta.contains(0x15)) {
+                //qDebug()<< "Recebido 15";
+                return 2;
+            }
+            return 0;
+        }
 
         QCoreApplication::processEvents(); // Mantém a UI responsiva
         QThread::msleep(50);
     }
 
-    qWarning() << "Timeout esperando pelo byte" << QString::number(byteEsperado, 16);
-    return false;
+    qWarning() << "Timeout esperando pelo byte pela resposta..." ;
+    return 0;
 }
 
 char PdTermXmodem::calcularChecksum(const QByteArray &dados)
