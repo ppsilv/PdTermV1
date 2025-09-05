@@ -207,19 +207,6 @@ bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
         QByteArray dataToSend;
 
-        if ( keyEvent->key() ==  Qt::Key_L){
-            ui->plainTextEdit->clear();
-            return false;
-        }
-        if ( keyEvent->key() == Qt::Key_Y) {
-            m_serial->connectSerial("/dev/ttyUSB0");
-            return false;
-        }
-        if ( keyEvent->key() == Qt::Key_U) {
-            m_serial->disconnectSerial();
-            return false;
-        }
-
         // Tecla com caractere visível (ex: 'A', '1')
         if (!keyEvent->text().isEmpty()) {
             char asciiChar = keyEvent->text().at(0).toLatin1();

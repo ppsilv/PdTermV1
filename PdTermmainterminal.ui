@@ -145,22 +145,22 @@
   </action>
   <action name="action_Limpar">
    <property name="text">
-    <string>&amp;Limpar           Ctrl+L</string>
+    <string>&amp;Limpar </string>
    </property>
   </action>
   <action name="action_Enviar_arquivo">
    <property name="text">
-    <string>&amp;Enviar arquivo   Ctrl+S</string>
+    <string>&amp;Enviar arquivo</string>
    </property>
   </action>
   <action name="actionConectar">
    <property name="text">
-    <string>Conectar           Ctrl+Y</string>
+    <string>Conectar</string>
    </property>
   </action>
   <action name="actionDesconectar">
    <property name="text">
-    <string>Desconectar    Ctrl+U</string>
+    <string>Desconectar</string>
    </property>
   </action>
   <action name="actionteste">
