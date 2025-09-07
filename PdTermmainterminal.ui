@@ -112,7 +112,7 @@
   </action>
   <action name="actionPdTermPro_V1">
    <property name="text">
-    <string>PdTermPro V1</string>
+    <string>PdTermPro V1.0 Rb</string>
    </property>
   </action>
   <action name="actionDesenvolvido_por_PdSilva">

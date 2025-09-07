@@ -136,29 +136,30 @@ void PdTermXmodem::enviarArquivoXmodem()
         char checksum = calcularChecksum(block.mid(3, BLOCK_SIZE));
         block.append(checksum);
 
-        printFile(block);
+        //printFile(block);
         // Enviar bloco
         //enviarDados(block);
 
         for (int i = 0; i < block.size(); ++i) {
             enviarDados(QByteArray(1, block.at(i)));  // ✅ Forma ideal
             //qDebug() << "Env: "<< block.at(i);
-            QThread::msleep(1);
+         //   QThread::msleep(1);
         }
 
         // Aguardar ACK (0x06) ou NACK (0x15)
         total_envios++;
         char resposta = 0;
-        qDebug()<< "Aguardando 0x06 (ACK)";
+        //qDebug()<< "Aguardando 0x06 (ACK)";
         int answer= esperarAckNack(1000);
         if( answer == 2 ){
             total_blocos_reenviados++;
             reenvio++;
-            if ( reenvio == 5 ){
+            if ( reenvio == 10 ){
                 emit erroOcorreu("Falha na transferência");
                 setFlag(true);
                 return;
             }
+            qDebug()<<"Recebido NACK da Placa";
             continue;
         }
         reenvio=0;
@@ -167,22 +168,11 @@ void PdTermXmodem::enviarArquivoXmodem()
             setFlag(true);
             return;
         }
-        qDebug() << "Block " << blockNumber << " recebido com sucesso";
-
-       // if (!esperarPorByte(0x06, 10000)) { // Timeout de 10s para ACK
-       //     qDebug()<< "Vou aguardar 0x15 (NACK)";
-       //     if (!esperarPorByte(0x15)) {
-       //         emit erroOcorreu("Falha na transferência");
-       //         setFlag(true);
-       //         return;
-       //     }
-       //     // NACK recebido, reenviar bloco
-       //     continue;
-       // }
+        //qDebug() << "Block " << blockNumber << " recebido com sucesso";
 
         // Atualizar progresso
         bytesSent += bytesToCopy;
-        int progresso = (bytesSent * 100) / fileData.size();
+        //int progresso = (bytesSent * 100) / fileData.size();
         //emit progressoAtualizado(progresso);
 
         blockNumber++;
@@ -222,7 +212,7 @@ bool PdTermXmodem::esperarPorByte(char byteEsperado, int timeout_ms) {
             }
         }
         QCoreApplication::processEvents(); // Mantém a UI responsiva
-        QThread::msleep(50);
+        QThread::msleep(5);
     }
     qWarning() << "Timeout esperando pelo byte" << QString::number(byteEsperado, 16);
     return false;
@@ -255,7 +245,7 @@ int PdTermXmodem::esperarAckNack(int timeout_ms) {
         }
 
         QCoreApplication::processEvents(); // Mantém a UI responsiva
-        QThread::msleep(50);
+        QThread::msleep(5);
     }
 
     qWarning() << "Timeout esperando pelo byte pela resposta..." ;

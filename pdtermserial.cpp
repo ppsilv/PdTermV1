@@ -4,7 +4,7 @@
 
 PdTermSerial::PdTermSerial(QObject *parent) : QObject(parent),
     serial(new QSerialPort(this)),
-    currentBaudRate(9600),
+    currentBaudRate(115200),
     currentDataBits(QSerialPort::Data8),
     currentParity(QSerialPort::NoParity),
     currentStopBits(QSerialPort::OneStop),
