@@ -60,6 +60,7 @@ void PdTermXmodem::enviarArquivoXmodem()
         QDir::homePath(), // Start in the user's home directory
         tr("Text files (*.bin);;All files (*.*)"));
 
+    setTextAtPosition(1, 0, "│   MEU TERMINAL CUSTOMIZADO   │ ", Qt::yellow);
     //***********************************************
     // Sem arquivo retorna
     if (filePath.isEmpty()) {

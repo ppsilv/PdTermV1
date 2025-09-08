@@ -1,5 +1,9 @@
 #ifndef PDTERMXMODEM_H
 #define PDTERMXMODEM_H
+/*
+ * Filename: pdtermxmodem.h
+ */
+
 
 #include <QObject>
 #include <QFile>
