@@ -1,21 +1,20 @@
 #ifndef PDTERMXMODEM_H
 #define PDTERMXMODEM_H
-/*
- * Filename: pdtermxmodem.h
- */
-
 
 #include <QObject>
 #include <QFile>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QThread> // Não é estritamente necessário aqui, mas útil para Qt::QueuedConnection
 
 class PdTermXmodem : public QObject
 {
     Q_OBJECT
 public:
     explicit PdTermXmodem(QObject *parent = nullptr);
+
     void enviarArquivoXmodem();
+    void setFilePath(QString filePath);
 
     // Callbacks com mesma estrutura
     typedef QByteArray (*SerialIOFunc)(void* context, int timeout_ms); // Para recepção
@@ -40,14 +39,22 @@ public:
         }
     }
 
-
 signals:
+    // Esses sinais serão conectados aos slots da janela principal (que vive na GUI thread)
     void transmissaoCancelada();
     void transmissaoConcluida();
     void erroOcorreu(const QString &mensagem);
     void progressoAtualizado(int porcentagem);
+    // Um sinal para informar que o processo terminou e a thread pode ser finalizada
+    void finished(); // NOVO SINAL
+
+public slots:
+    // Um slot para solicitar o cancelamento do envio de forma segura
+    void cancelarTransmissao(); // NOVO SLOT
 
 private:
+    QString m_filePath;
+    bool m_cancelado; // NOVA VARIÁVEL: Flag para cancelamento solicitado
     int reenvio;
     int total_envios;
     int total_blocos;

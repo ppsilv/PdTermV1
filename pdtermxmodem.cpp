@@ -9,11 +9,20 @@
 #include <QCoreApplication>
 
 
-PdTermXmodem::PdTermXmodem(QObject *parent): QObject{parent}
+PdTermXmodem::PdTermXmodem(QObject *parent): QObject{parent},
+    m_cancelado(false), // Inicializa a flag de cancelamento
+    reenvio(0),
+    total_envios(0),
+    total_blocos(0),
+    total_blocos_reenviados(0)
 {
-    total_envios=0;
-    total_blocos=0;
-    total_blocos_reenviados=0;
+
+}
+
+// NOVO SLOT para cancelamento
+void PdTermXmodem::cancelarTransmissao() {
+    qDebug() << "Cancelamento solicitado via thread.";
+    m_cancelado = true;
 }
 
 void PdTermXmodem::printFile( QByteArray fileData )
@@ -51,27 +60,29 @@ void PdTermXmodem::printFile( QByteArray fileData )
         }
     }
 }
-
+void PdTermXmodem::setFilePath(QString filePath)
+{
+    m_filePath = filePath;
+}
 void PdTermXmodem::enviarArquivoXmodem()
 {
-    QString filePath = QFileDialog::getOpenFileName(
-        nullptr,
-        tr("Open File"),
-        QDir::homePath(), // Start in the user's home directory
-        tr("Text files (*.bin);;All files (*.*)"));
+  try {
+    qDebug() << "XMODEM iniciado na thread:" << QThread::currentThreadId();
+      qDebug() << "File path:" << m_filePath;
+    // Reseta a flag de cancelamento no início de cada transmissão
+    m_cancelado = false;
 
-    setTextAtPosition(1, 0, "│   MEU TERMINAL CUSTOMIZADO   │ ", Qt::yellow);
-    //***********************************************
-    // Sem arquivo retorna
-    if (filePath.isEmpty()) {
-        emit transmissaoCancelada();
-        emit progressoAtualizado(100);
+
+    if (m_filePath.isEmpty()) {
+        emit erroOcorreu("Caminho do arquivo vazio");
+        emit finished();
         return;
     }
 
+
     //***********************************************
     // Abrir o arquivo
-    QFile arquivo(filePath);
+    QFile arquivo(m_filePath);
     if (!arquivo.open(QIODevice::ReadOnly)) {
         emit erroOcorreu("Falha ao abrir o arquivo");
         return;
@@ -110,12 +121,14 @@ void PdTermXmodem::enviarArquivoXmodem()
     const int BLOCK_SIZE = 128;
     int blockNumber = 1;
     int bytesSent = 0;
-    bool cancelado = false;
+    int total_blocos=fileData.size()/BLOCK_SIZE;
+
+    int bloco = 1;
     total_envios=0;
     total_blocos_reenviados=0;
     reenvio=0;
 
-    while (bytesSent < fileData.size() && !cancelado) {
+    while (bytesSent < fileData.size() && !m_cancelado) {
         // Preparar bloco
         QByteArray block;
         block.append(0x01); // SOH
@@ -149,6 +162,7 @@ void PdTermXmodem::enviarArquivoXmodem()
 
         // Aguardar ACK (0x06) ou NACK (0x15)
         total_envios++;
+        bloco++;
         char resposta = 0;
         //qDebug()<< "Aguardando 0x06 (ACK)";
         int answer= esperarAckNack(1000);
@@ -157,6 +171,7 @@ void PdTermXmodem::enviarArquivoXmodem()
             reenvio++;
             if ( reenvio == 10 ){
                 emit erroOcorreu("Falha na transferência");
+                emit finished(); // Indica que o worker terminou seu trabalho
                 setFlag(true);
                 return;
             }
@@ -175,22 +190,43 @@ void PdTermXmodem::enviarArquivoXmodem()
         bytesSent += bytesToCopy;
         //int progresso = (bytesSent * 100) / fileData.size();
         //emit progressoAtualizado(progresso);
+        int porcentagem = (bloco * 100) / total_blocos;
+        emit progressoAtualizado(porcentagem);
 
         blockNumber++;
 
         if (blockNumber > 255) blockNumber = 1;
     }
+    if (m_cancelado) {
+        qDebug() << "Transmissão cancelada pelo usuário.";
+        emit transmissaoCancelada();
+        emit finished(); // Indica que o worker terminou seu trabalho
+        return;
+    }
+
     qDebug() << "Terminando enviando EOT";
     // 5. Enviar EOT (0x04) para finalizar
     enviarDados(QByteArray(1, 0x04));
 
     // 6. Concluir
+    // No final da execução normal, emita o sinal finished()
     emit transmissaoConcluida();
+    emit finished();
+
     setFlag(true);
     total_blocos=blockNumber-1;
     qDebug() << "Total blocos do arquivo: "<<total_blocos;
     qDebug() << "Total blocos reenviados: "<<total_blocos_reenviados;
     qDebug() << "Total blocos   enviados: "<<total_envios;
+  } catch (const std::exception &e) {
+      qCritical() << "Exceção em XMODEM:" << e.what();
+      emit erroOcorreu(QString("Exceção: %1").arg(e.what()));
+      emit finished();
+  } catch (...) {
+      qCritical() << "Exceção desconhecida em XMODEM";
+      emit erroOcorreu("Exceção desconhecida");
+      emit finished();
+  }
 }
 
 bool PdTermXmodem::esperarPorByte(char byteEsperado, int timeout_ms) {

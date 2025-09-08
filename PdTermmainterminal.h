@@ -21,9 +21,8 @@ QT_END_NAMESPACE
 class PdTermMainTerminal : public QMainWindow
 {
     Q_OBJECT
-
 public:
-    PdTermMainTerminal(QWidget *parent = nullptr);
+    explicit PdTermMainTerminal(QWidget *parent = nullptr);
     ~PdTermMainTerminal();
     void setTextAtPosition(int row, int col, const QString &text, const QColor &color = Qt::green);
     void ensureLineExists(int row);  // Novo método auxiliar
@@ -52,13 +51,19 @@ public slots:
     void setBold(bool enabled);
     void unknownSequence(const QByteArray &seq);
 
+    // Seu slot existente que inicia o processo (ex.: conectado a um botão "Enviar")
+    void on_botaoEnviar_clicked();
+    // Slot para finalizar a thread quando o worker terminar
+    void onWorkerFinished();
+
 private:
     QProgressBar *progressBar;
     Ui::PdTermMainTerminal *ui;
     Worker *m_worker;
     QThread *m_thread;
     PdTermSerial *m_serial;
-    PdTermXmodem *m_xmodem;
+    PdTermXmodem *m_xmodemWorker;
+    QThread *m_workerThread;      // Ponteiro para a thread do worker
     PdTerminalControl *m_control;
     QColor cor;
 
@@ -77,6 +82,9 @@ private:
 
     //flags
     bool flagsetBold;
+
+    //Threads clean ups
+    void cleanupThread();
 
 };
 #endif // PGTERMMAINTERMINAL_H

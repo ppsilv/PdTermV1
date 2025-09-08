@@ -21,9 +21,15 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     , m_worker(new Worker)
     , m_thread(new QThread(this))
     , m_serial(new PdTermSerial(this))
-    , m_xmodem(new PdTermXmodem(this))
+    , m_xmodemWorker(nullptr)
+    , m_workerThread(nullptr)
     , m_control(new PdTerminalControl(this))
 {
+    qDebug() << "Construtor MainWindow iniciado";
+    ui->setupUi(this);
+    qDebug() << "UI setup completo";
+
+    ui->setupUi(this);
     this->setWindowTitle("PdTermV1");
     this->setWindowIcon(QIcon(":icons/pdtermv2.svg"));
     ui->setupUi(this);
@@ -62,30 +68,6 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     ui->statusbar->setStyleSheet("QStatusBar::item { border: none; margin: 2px; }");;
     //------------------------statusbar---------------------------------------------------
 
-    // Configuração unificada
-    m_xmodem->io_context = this;
-
-    // Callback de recepção (já funciona como você tem)
-  //  m_xmodem->recebe_dados_serial = [](void* ctx, int timeout) -> QByteArray {
-  //      return static_cast<PdTermMainTerminal*>(ctx)->receiveSerialData(timeout);
-  //  };
-    m_xmodem->recebe_dados_serial = [](void* ctx, int timeout) -> QByteArray {
-        if (!ctx) return QByteArray(); // ⚠️ Proteção adicional
-        return static_cast<PdTermMainTerminal*>(ctx)->receiveSerialData(timeout);
-    };
-   // m_xmodem->receive_context = this; // ⚠️ Não esqueça disso!
-
-
-    // Callback de envio (nova versão simplificada)
-    m_xmodem->envia_dados_serial = [](void* ctx, const QByteArray& data) {
-        static_cast<PdTermMainTerminal*>(ctx)->sendSerialData(data);
-    };
-
-    m_xmodem->set_envia_flag_serial = [](void* ctx, bool flag) {
-        static_cast<PdTermMainTerminal*>(ctx)->setFlagSerial(flag);
-    };
-
-    setupXmodemSignals();
 
     //***********************************************************************************
     // SERIAL
@@ -192,15 +174,36 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     writeTerminal("TEXTO AZUL E BOLD na linha 15");
     cor = Qt::green;
 */
+    // CONECTE O BOTÃO AO SLOT - ISSO É ESSENCIAL!
+    connect(ui->botaoEnviar, &QPushButton::clicked,
+            this, &PdTermMainTerminal::on_botaoEnviar_clicked);
+
+    // Conecte também o botão de cancelar
+    connect(ui->botaoCancelar, &QPushButton::clicked, this, [this]() {
+        if (m_xmodemWorker) {
+            QMetaObject::invokeMethod(m_xmodemWorker, "cancelarTransmissao", Qt::QueuedConnection);
+        }
+    });
+
+    // Configure estado inicial dos botões
+    ui->botaoCancelar->setEnabled(false);
+
+    qDebug() << "Construtor terminado completo";
 
 }
 
 PdTermMainTerminal::~PdTermMainTerminal()
 {
-    m_thread->quit();
-    m_thread->wait();  // Opcional: espera a thread finalizar
-    delete m_serial;  // Garante que a porta serial seja fechada
+    qDebug() << "Destrutor MainWindow iniciado";
+    cleanupThread();
+    if (m_workerThread && m_workerThread->isRunning()) {
+        m_workerThread->quit();
+        m_workerThread->wait(1000); // Timeout de 1 segundo
+    }
+    delete m_workerThread; // A thread já deve ter se deletado, mas é seguro
+    delete m_serial;
     delete ui;
+    qDebug() << "Destrutor MainWindow finalizado";
 }
 bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
     if (obj == ui->plainTextEdit && event->type() == QEvent::KeyPress) {
@@ -327,17 +330,19 @@ void PdTermMainTerminal::writeTerminal(const QString &mensagem, bool newline){
 //*******************************************************************************************
 //*************************************ON XMODEM************************************************
 //*******************************************************************************************
+/*
 void PdTermMainTerminal::setupXmodemSignals(){
     // Conectando os signals aos slots
     connect(ui->action_Enviar_arquivo, &QAction::triggered, this, [this]() {
-        m_xmodem->enviarArquivoXmodem();
+        m_xmodemWorker->enviarArquivoXmodem();
     });
-    connect(m_xmodem, &PdTermXmodem::transmissaoCancelada, this, &PdTermMainTerminal::onTransmissaoCancelada);
-    connect(m_xmodem, &PdTermXmodem::transmissaoConcluida, this, &PdTermMainTerminal::onTransmissaoConcluida);
-    connect(m_xmodem, &PdTermXmodem::erroOcorreu,          this, &PdTermMainTerminal::onErroOcorreu);
-    connect(m_xmodem, &PdTermXmodem::progressoAtualizado,  progressBar, &QProgressBar::setValue);
+    connect(m_xmodemWorker, &PdTermXmodem::transmissaoCancelada, this, &PdTermMainTerminal::onTransmissaoCancelada);
+    connect(m_xmodemWorker, &PdTermXmodem::transmissaoConcluida, this, &PdTermMainTerminal::onTransmissaoConcluida);
+    connect(m_xmodemWorker, &PdTermXmodem::erroOcorreu,          this, &PdTermMainTerminal::onErroOcorreu);
+    connect(m_xmodemWorker, &PdTermXmodem::progressoAtualizado,  progressBar, &QProgressBar::setValue);
 
 }
+
 void PdTermMainTerminal::onTransmissaoCancelada(){
     qDebug() << "[INOF]-Transmissão cancelada pelo usuário";
     QMessageBox::information(this, "Xmodem", "Transmissão cancelada");
@@ -366,7 +371,7 @@ void PdTermMainTerminal::onProgressoAtualizado(int porcentagem) {
     );
     progressBar->setValue(porcentagem);
 }
-
+*/
 QByteArray PdTermMainTerminal::receiveSerialData(int timeout_ms) {
     return m_serial->waitForData(timeout_ms);
 }
@@ -569,4 +574,171 @@ void PdTermMainTerminal::ensureLineExists(int row) {
             cursor.insertText("\n");
         }
     }
+}
+
+//Nova IMPLEMENTACAO
+void PdTermMainTerminal::on_botaoEnviar_clicked()
+{
+    cleanupThread();
+    // Abra o diálogo na thread principal
+    QString filePath = QFileDialog::getOpenFileName(
+        this,
+        tr("Selecionar Arquivo"),
+        QDir::homePath(),
+        tr("Arquivos binários (*.bin);;Todos os arquivos (*)")
+        );
+
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    // 1. Impede múltiplos cliques
+    ui->botaoEnviar->setEnabled(false);
+    ui->botaoCancelar->setEnabled(true);
+
+    // 2. Limpa qualquer thread/worker anterior
+    if (m_workerThread && m_workerThread->isRunning()) {
+        m_workerThread->quit();
+        m_workerThread->wait();
+        delete m_workerThread;
+        m_workerThread = nullptr;
+    }
+    if (m_xmodemWorker) {
+        delete m_xmodemWorker;
+        m_xmodemWorker = nullptr;
+    }
+
+    // 3. Cria NOVOS objetos Thread e Worker
+    m_workerThread = new QThread(this);
+    m_xmodemWorker = new PdTermXmodem();
+
+    // 4. Configure filePath ANTES de mover para thread
+    m_xmodemWorker->setFilePath(filePath);
+
+    // 5. Configure os callbacks
+    m_xmodemWorker->recebe_dados_serial = [](void* context, int timeout_ms) -> QByteArray {
+        PdTermSerial* serial = static_cast<PdTermSerial*>(context);
+        return serial->waitForData(timeout_ms);
+    };
+
+    m_xmodemWorker->envia_dados_serial = [](void* context, const QByteArray& data) {
+        PdTermSerial* serial = static_cast<PdTermSerial*>(context);
+        serial->sendData(data);
+    };
+
+    m_xmodemWorker->set_envia_flag_serial = [](void* context, bool flag) {
+        PdTermSerial* serial = static_cast<PdTermSerial*>(context);
+        qDebug() << "Flag setada para:" << flag;
+    };
+
+    m_xmodemWorker->io_context = m_serial;
+
+    // 6. Move o worker para a nova thread
+    m_xmodemWorker->moveToThread(m_workerThread);
+
+    // 7. Conecte os sinais de finalização
+    connect(m_xmodemWorker, &PdTermXmodem::finished, m_workerThread, &QThread::quit);
+    connect(m_xmodemWorker, &PdTermXmodem::finished, m_xmodemWorker, &PdTermXmodem::deleteLater);
+    connect(m_workerThread, &QThread::finished, m_workerThread, &QThread::deleteLater);
+    connect(m_workerThread, &QThread::finished, this, [this]() {
+        m_workerThread = nullptr;
+        ui->botaoEnviar->setEnabled(true);
+        ui->botaoCancelar->setEnabled(false);
+    });
+
+
+    // 8. Conecte os sinais de status
+    connect(m_xmodemWorker, &PdTermXmodem::transmissaoConcluida, this, &PdTermMainTerminal::onTransmissaoConcluida, Qt::QueuedConnection);
+    connect(m_xmodemWorker, &PdTermXmodem::transmissaoCancelada, this, &PdTermMainTerminal::onTransmissaoCancelada, Qt::QueuedConnection);
+    connect(m_xmodemWorker, &PdTermXmodem::erroOcorreu, this, &PdTermMainTerminal::onErroOcorreu, Qt::QueuedConnection);
+    connect(m_xmodemWorker, &PdTermXmodem::progressoAtualizado, this, &PdTermMainTerminal::onProgressoAtualizado, Qt::QueuedConnection);
+
+    // 9. Conecte o cancelamento
+    connect(ui->botaoCancelar, &QPushButton::clicked, this, [this]() {
+        if (m_xmodemWorker) {
+            QMetaObject::invokeMethod(m_xmodemWorker, "cancelarTransmissao", Qt::QueuedConnection);
+        }
+    });
+
+    // 9. Conecte o início da execução (APENAS UMA DESTAS DUAS OPÇÕES)
+    // OPÇÃO 1: Usando invokeMethod (mais seguro)
+    connect(m_workerThread, &QThread::started, this, [this, filePath]() {
+        QMetaObject::invokeMethod(m_xmodemWorker, "enviarArquivoXmodem",
+                                  Qt::QueuedConnection,
+                                  Q_ARG(QString, filePath));
+    });
+
+    // 10. Conexão de INÍCIO - Esta é a que estava faltando!
+    connect(m_workerThread, &QThread::started, m_xmodemWorker, [this]() {
+        // Isso executa NA THREAD WORKER!
+        m_xmodemWorker->enviarArquivoXmodem();
+    });
+
+    // 11. Inicia a Thread!
+    m_workerThread->start();
+    qDebug() << "Thread iniciada, aguardando started signal...";
+}
+// Implementações dos Slots da MainWindow
+void PdTermMainTerminal::onTransmissaoConcluida() {
+    qDebug() << "Transmissão concluída com sucesso!";
+    statusBar()->showMessage("Transmissão concluída com sucesso!");
+    // A reativação do botão é feita no sinal finished da thread
+}
+
+void PdTermMainTerminal::onTransmissaoCancelada() {
+    qDebug() << "Transmissão cancelada.";
+    statusBar()->showMessage("Transmissão cancelada.");
+}
+
+void PdTermMainTerminal::onErroOcorreu(const QString &mensagem) {
+    qDebug() << "Erro na transmissão:" << mensagem;
+    statusBar()->showMessage("Erro: " + mensagem);
+    QMessageBox::critical(this, "Erro XMODEM", mensagem);
+    // O sinal 'finished' também será emitido, limpando a UI.
+}
+
+void PdTermMainTerminal::onProgressoAtualizado(int porcentagem) {
+    // Atualiza a barra de progresso na UI
+    progressBar->setValue(porcentagem);
+}
+
+void PdTermMainTerminal::onWorkerFinished()
+{
+    // Este slot é chamado quando a thread do worker termina
+    qDebug() << "Thread do worker finalizada";
+
+    // Limpa os ponteiros (já devem ter sido deletados automaticamente pelas conexões)
+    m_xmodemWorker = nullptr;
+    m_workerThread = nullptr;
+
+    // Reativa o botão de enviar (se necessário)
+    ui->botaoEnviar->setEnabled(true);
+    ui->botaoCancelar->setEnabled(false);
+
+    // Opcional: atualiza status na UI
+    statusBar()->showMessage("Transmissão finalizada");
+}
+
+void PdTermMainTerminal::cleanupThread()
+{
+    if (m_workerThread && m_workerThread->isRunning()) {
+        // Primeiro, cancela a transmissão se estiver ativa
+        if (m_xmodemWorker) {
+            QMetaObject::invokeMethod(m_xmodemWorker, "cancelarTransmissao", Qt::BlockingQueuedConnection);
+        }
+
+        // Para a thread de forma segura
+        m_workerThread->quit();
+        if (!m_workerThread->wait(2000)) { // Timeout de 2 segundos
+            qWarning() << "Thread não terminou a tempo, terminando forçadamente";
+            m_workerThread->terminate();
+            m_workerThread->wait();
+        }
+    }
+
+    delete m_workerThread;
+    m_workerThread = nullptr;
+
+    // Não delete m_xmodemWorker - ele é gerenciado pela thread
+    m_xmodemWorker = nullptr;
 }

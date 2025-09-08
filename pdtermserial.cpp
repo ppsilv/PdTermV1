@@ -54,6 +54,13 @@ bool PdTermSerial::connectSerial(const QString &portName, int baudRate,
                                  QSerialPort::StopBits stopBits,
                                  QSerialPort::FlowControl flowControl)
 {
+    qDebug() << "Tentando conectar na porta:" << portName;
+
+    if (!serial) {
+        qCritical() << "Ponteiro QSerialPort é nulo!";
+        return false;
+    }
+
     if (serial->isOpen()) {
         emit statusChanged("Já conectado a " + serial->portName());
         return true;
