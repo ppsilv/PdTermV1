@@ -36,9 +36,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         pdtermxmodem.h pdtermxmodem.cpp
-        icons.qrc
-        pdterminalcontrol.h pdterminalcontrol.cpp
         resource.qrc
+        pdterminalcontrol.h pdterminalcontrol.cpp
+
     )
 else()
     if(ANDROID)

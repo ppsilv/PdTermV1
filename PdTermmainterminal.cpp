@@ -39,8 +39,8 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     //toolBar Criando manualmente porque se fizer tudo no arquivo UI aparece duplicado, porque o qtcreator cria
     //uma toolbar por padrao. pelo projeto escolhido
     // Crie ações manualmente
-    QAction *actionEnviarArquivo = new QAction(QIcon(":/icons/icons/sendfile.png"), "Enviar arquivo", this);
-    QAction *actionCancelarEnvio = new QAction(QIcon(":/icons/icons/cancel.png"), "Cancelar envio", this);
+    QAction *actionEnviarArquivo = new QAction(QIcon(":/icons/sendfile.png"), "Enviar arquivo", this);
+    QAction *actionCancelarEnvio = new QAction(QIcon(":/icons/cancel.png"), "Cancelar envio", this);
 
     connect(actionEnviarArquivo, &QAction::triggered, this, &PdTermMainTerminal::on_botaoEnviar_clicked);
     connect(actionCancelarEnvio, &QAction::triggered, this, [this]() {
@@ -55,8 +55,8 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     ui->toolbar->addSeparator();
 
 
-    QAction *actionConectar = new QAction(QIcon(":/icons/icons/connect.png"), "Conectar RS232", this);
-    QAction *actionDesconectar = new QAction(QIcon(":/icons/icons/disconnect.png"), "Desconectar RS232", this);
+    QAction *actionConectar = new QAction(QIcon(":/icons/connect.png"), "Conectar RS232", this);
+    QAction *actionDesconectar = new QAction(QIcon(":/icons/disconnect.png"), "Desconectar RS232", this);
 
     connect(actionConectar, &QAction::triggered, this, [this]() {
         m_serial->connectSerial("/dev/ttyUSB0");  // Ou obtenha a porta de um QComboBox
@@ -64,7 +64,7 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     connect(actionDesconectar, &QAction::triggered, m_serial, &PdTermSerial::disconnectSerial);
 
 
-    QAction *actionConfigurar = new QAction(QIcon(":/icons/icons/settings.png"), "Configurar RS232", this);
+    QAction *actionConfigurar = new QAction(QIcon(":/icons/settings.png"), "Configurar RS232", this);
     connect(actionConfigurar, &QAction::triggered,this, &PdTermMainTerminal::on_actionSerialSettings);
 
     ui->toolbar->addAction(actionConectar);
@@ -96,7 +96,7 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     // 1. Crie um NOVO LED para a toolbar (não use o ui->led existente)
     toolbarLed = new QLabel(this);
     toolbarLed->setFixedSize(64, 64);
-    toolbarLed->setPixmap(QPixmap(":/icons/icons/led_green.png").scaled(64, 64));
+    toolbarLed->setPixmap(QPixmap(":/icons/led_green.png").scaled(64, 64));
 
 
 
@@ -234,7 +234,7 @@ bool PdTermMainTerminal::eventFilter(QObject *obj, QEvent *event) {
         return true; // Consome o evento
     }
     return QObject::eventFilter(obj, event);
-}
+}/*
 QString PdTermMainTerminal::openFileXmodem()
 {
     QString filePath = QFileDialog::getOpenFileName(this,
@@ -243,7 +243,7 @@ QString PdTermMainTerminal::openFileXmodem()
                                                     tr("Text files (*.txt);;All files (*.*)"));
 
     return filePath;
-}
+}*/
 void PdTermMainTerminal::testeTelaTerminal()
 {
     appendTerminalText("$ Usuário logado.");
@@ -424,7 +424,6 @@ void PdTermMainTerminal::onSerialError(const QString &error)
 
 void PdTermMainTerminal::onSerialStatusChanged(const QString &status)
 {
-    qDebug()<<"onSerialStatusChanged "<<status;
     if(status.contains("Conectado")){
         statusBar()->showMessage(status);
         updateSerialStatus(true);
@@ -508,11 +507,11 @@ void PdTermMainTerminal::updateSerialStatus(bool connected) {
     if (connected) {
         //color = palette().color(QPalette::Highlight); // Cor de destaque do tema
         color.setGreen(255);
-        toolbarLed->setPixmap(QPixmap(":/icons/icons/led_green.png")); // .scaled(48, 48));
+        toolbarLed->setPixmap(QPixmap(":/icons/led_green.png")); // .scaled(48, 48));
     } else {
         //color = palette().color(QPalette::Text); // Cor de texto do tema
         color.setRed(255);
-        toolbarLed->setPixmap(QPixmap(":/icons/icons/led_red.png"));
+        toolbarLed->setPixmap(QPixmap(":/icons/led_red.png"));
     }
 
     //painter.setBrush(color);

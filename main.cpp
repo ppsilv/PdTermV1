@@ -31,13 +31,13 @@ int main(int argc, char *argv[])
 
         // Configurações críticas para Linux
 
-        QApplication::setWindowIcon(QIcon(":/icons/icons/pdtermv2.svg"));
+        QApplication::setWindowIcon(QIcon(":/icons/pdtermv2.svg"));
 
         // Força o carregamento do tema correto
         QIcon::setThemeName("hicolor");
         QIcon::setFallbackThemeName("hicolor");
 
-        a.setWindowIcon(QIcon(":/icons/icons/pdtermv2.svg")); // Caminho no resource
+        a.setWindowIcon(QIcon(":/icons/pdtermv2.svg")); // Caminho no resource
 
 
 
