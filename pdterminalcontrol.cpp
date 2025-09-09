@@ -7,13 +7,13 @@ PdTerminalControl::PdTerminalControl(QObject *parent)
     setupCSICommands();
 }
 
-void PdTerminalControl::processData(const QByteArray &data)
+bool PdTerminalControl::processData(const QByteArray &data)
 {
     for (char c : data) {
         switch (m_state) {
         case Normal:
             processNormalChar(c);
-            break;
+            return true;
         case Escape:
             processEscapeSequence(c);
             break;
@@ -25,6 +25,7 @@ void PdTerminalControl::processData(const QByteArray &data)
             break;
         }
     }
+    return false;
 }
 
 void PdTerminalControl::resetTerminal()

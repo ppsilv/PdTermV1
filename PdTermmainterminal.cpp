@@ -31,6 +31,8 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     ui->setupUi(this);
     qDebug() << "UI setup completo";
 
+    ansiterm = new PdTerminalControl ();
+
     ui->toolbar->setFixedWidth(800);
     ui->toolbar->setMinimumHeight(64);
     //********************************************************************************************************
@@ -409,7 +411,8 @@ void PdTermMainTerminal::onSerialDataReceived(const QByteArray &data)
 {
     if( flag_from_serial_write_to_terminal ){
         //appendTerminalText(QString::fromUtf8(data), Qt::green);
-        writeTerminal(QString::fromUtf8(data));
+        if (ansiterm->processData(data) )
+            writeTerminal(QString::fromUtf8(data));
     }
 }
 
@@ -421,12 +424,12 @@ void PdTermMainTerminal::onSerialError(const QString &error)
 
 void PdTermMainTerminal::onSerialStatusChanged(const QString &status)
 {
-    statusBar()->showMessage(status);
-    //appendTerminalText("[STATUS] " + status, Qt::blue);
-    //statusBar()->setText(status);
+    qDebug()<<"onSerialStatusChanged "<<status;
     if(status.contains("Conectado")){
+        statusBar()->showMessage(status);
         updateSerialStatus(true);
-    }else{
+    }else if(status.contains("Desconectado")){
+        statusBar()->showMessage(status);
         updateSerialStatus(false);
     }
 }

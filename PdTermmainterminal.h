@@ -92,6 +92,8 @@ private:
     QPushButton *m_serialStatusLed;
     QLabel *toolbarLed ;
     QLabel *label ;
+
+    PdTerminalControl *ansiterm;
 };
 #endif // PGTERMMAINTERMINAL_H
 

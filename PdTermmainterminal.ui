@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>700</height>
+    <width>825</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>PdTermV1</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="QIcon::ThemeIcon::SoftwareUpdateAvailable" resource="icons.qrc">
+   <iconset theme="QIcon::ThemeIcon::SoftwareUpdateAvailable">
     <normaloff>:/icons/pdtermv1.svg</normaloff>
     <normalon>:/icons/pdtermv2.svg</normalon>
     <disabledoff>:/icons/pdtermv1.svg</disabledoff>
@@ -35,9 +35,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>0</y>
-      <width>801</width>
-      <height>641</height>
+      <y>-1</y>
+      <width>825</width>
+      <height>480</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -61,7 +61,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>825</width>
      <height>23</height>
     </rect>
    </property>
@@ -214,8 +214,6 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

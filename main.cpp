@@ -26,6 +26,21 @@ int main(int argc, char *argv[])
 
     try {
         QApplication a(argc, argv);
+        QApplication::setDesktopFileName("PdTermV1");
+
+
+        // Configurações críticas para Linux
+
+        QApplication::setWindowIcon(QIcon(":/icons/icons/pdtermv2.svg"));
+
+        // Força o carregamento do tema correto
+        QIcon::setThemeName("hicolor");
+        QIcon::setFallbackThemeName("hicolor");
+
+        a.setWindowIcon(QIcon(":/icons/icons/pdtermv2.svg")); // Caminho no resource
+
+
+
         PdTermMainTerminal w;
         w.show();
         return a.exec();

@@ -17,7 +17,7 @@ public:
         OSC  // Operating System Command
     };
 
-    void processData(const QByteArray &data);
+    bool processData(const QByteArray &data);
     void resetTerminal();
 
 signals:
