@@ -14,6 +14,8 @@
 #include <QFormLayout>
 #include <QDialogButtonBox>
 #include <QToolBar>
+#include <QPainter>
+
 
 PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     : QMainWindow(parent)
@@ -29,12 +31,14 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     ui->setupUi(this);
     qDebug() << "UI setup completo";
 
+    ui->toolbar->setFixedWidth(800);
+    ui->toolbar->setMinimumHeight(64);
     //********************************************************************************************************
     //toolBar Criando manualmente porque se fizer tudo no arquivo UI aparece duplicado, porque o qtcreator cria
     //uma toolbar por padrao. pelo projeto escolhido
     // Crie ações manualmente
-    QAction *actionEnviarArquivo = new QAction(QIcon(":/icons/icons/sendfile.png"), "Enviar", this);
-    QAction *actionCancelarEnvio = new QAction(QIcon(":/icons/icons/cancel.png"), "Cancelar", this);
+    QAction *actionEnviarArquivo = new QAction(QIcon(":/icons/icons/sendfile.png"), "Enviar arquivo", this);
+    QAction *actionCancelarEnvio = new QAction(QIcon(":/icons/icons/cancel.png"), "Cancelar envio", this);
 
     connect(actionEnviarArquivo, &QAction::triggered, this, &PdTermMainTerminal::on_botaoEnviar_clicked);
     connect(actionCancelarEnvio, &QAction::triggered, this, [this]() {
@@ -48,20 +52,59 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
 
     ui->toolbar->addSeparator();
 
-    QAction *actionConectar = new QAction(QIcon(":/icons/icons/connect.png"), "Conectar", this);
-    QAction *actionDesconectar = new QAction(QIcon(":/icons/icons/disconnect.png"), "Desconectar", this);
+
+    QAction *actionConectar = new QAction(QIcon(":/icons/icons/connect.png"), "Conectar RS232", this);
+    QAction *actionDesconectar = new QAction(QIcon(":/icons/icons/disconnect.png"), "Desconectar RS232", this);
 
     connect(actionConectar, &QAction::triggered, this, [this]() {
         m_serial->connectSerial("/dev/ttyUSB0");  // Ou obtenha a porta de um QComboBox
     });
     connect(actionDesconectar, &QAction::triggered, m_serial, &PdTermSerial::disconnectSerial);
 
-    QAction *actionConfigurar = new QAction(QIcon(":/icons/icons/settings.png"), "Configurar", this);
+
+    QAction *actionConfigurar = new QAction(QIcon(":/icons/icons/settings.png"), "Configurar RS232", this);
     connect(actionConfigurar, &QAction::triggered,this, &PdTermMainTerminal::on_actionSerialSettings);
 
     ui->toolbar->addAction(actionConectar);
     ui->toolbar->addAction(actionDesconectar);
+    ui->toolbar->addSeparator();
     ui->toolbar->addAction(actionConfigurar);
+
+    // No construtor
+    // Cria LED de status na statusbar
+    m_serialStatusLed = new QPushButton(this);
+    m_serialStatusLed->setFlat(true);
+    m_serialStatusLed->setEnabled(false); // Não clicável
+
+    QWidget *spacer = new QWidget();
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    ui->toolbar->addWidget(spacer);
+    ui->toolbar->addSeparator();
+    ui->toolbar->addWidget(spacer);
+
+
+
+
+    label = new QLabel();
+    label->setText("  ");
+    ui->toolbar->addWidget(label);
+    label->setFixedSize(525,64);
+
+
+    // 1. Crie um NOVO LED para a toolbar (não use o ui->led existente)
+    toolbarLed = new QLabel(this);
+    toolbarLed->setFixedSize(64, 64);
+    toolbarLed->setPixmap(QPixmap(":/icons/icons/led_green.png").scaled(64, 64));
+
+
+
+    ui->toolbar->addSeparator();
+    // 2. Adicione à toolbar
+    ui->toolbar->addWidget(toolbarLed);
+
+
+    // Estado inicial
+    updateSerialStatus(false);
 
     // Estado inicial
     ui->actionCancelarEnvio->setEnabled(false);
@@ -124,9 +167,9 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
    //layout->addWidget(statusBar);
 
     //Exemplo: Adicionar um QLabel à direita da statusBar padrão
-    QLabel *customLabel = new QLabel("Versão 1.0", this);
+    QLabel *customLabel = new QLabel("Versão 1.1", this);
     statusBar()->addPermanentWidget(customLabel);
-    statusBar()->showMessage("Mensagem no rodapé");
+
 
     //Cursor
     // No construtor da sua classe:
@@ -381,6 +424,11 @@ void PdTermMainTerminal::onSerialStatusChanged(const QString &status)
     statusBar()->showMessage(status);
     //appendTerminalText("[STATUS] " + status, Qt::blue);
     //statusBar()->setText(status);
+    if(status.contains("Conectado")){
+        updateSerialStatus(true);
+    }else{
+        updateSerialStatus(false);
+    }
 }
 
 void PdTermMainTerminal::setup_ui(){
@@ -444,6 +492,34 @@ void PdTermMainTerminal::on_actionSerialSettings()
     }
 }
 
+// Método para atualizar o status
+void PdTermMainTerminal::updateSerialStatus(bool connected) {
+    QPixmap led1(64, 64);
+    led1.fill(Qt::transparent);
+
+    QPainter painter(&led1);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // Usa cores do tema do sistema
+    QColor color;
+    if (connected) {
+        //color = palette().color(QPalette::Highlight); // Cor de destaque do tema
+        color.setGreen(255);
+        toolbarLed->setPixmap(QPixmap(":/icons/icons/led_green.png")); // .scaled(48, 48));
+    } else {
+        //color = palette().color(QPalette::Text); // Cor de texto do tema
+        color.setRed(255);
+        toolbarLed->setPixmap(QPixmap(":/icons/icons/led_red.png"));
+    }
+
+    //painter.setBrush(color);
+    //painter.setPen(Qt::NoPen);
+    //painter.drawEllipse(3, 3, 20, 20);
+
+    //ui->led->setPixmap(led1);
+   // ui->led->setToolTip(connected ? "Serial conectada" : "Serial desconectada");
+
+}
 //*******************************************************************************************
 //*********************************END SERIAL************************************************
 //*******************************************************************************************

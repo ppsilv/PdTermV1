@@ -24,6 +24,9 @@
     <selectedoff>:/icons/pdtermv1.svg</selectedoff>
     <selectedon>:/icons/pdtermv2.svg</selectedon>:/icons/pdtermv1.svg</iconset>
   </property>
+  <property name="layoutDirection">
+   <enum>Qt::LayoutDirection::LeftToRight</enum>
+  </property>
   <property name="unifiedTitleAndToolBarOnMac">
    <bool>false</bool>
   </property>
@@ -32,9 +35,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>-3</y>
+      <y>0</y>
       <width>801</width>
-      <height>631</height>
+      <height>641</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -90,15 +93,19 @@
      <string>Ferramentas</string>
     </property>
     <addaction name="action_Limpar"/>
-    <addaction name="actionEnviararquivo"/>
    </widget>
    <addaction name="menuConectar"/>
    <addaction name="menuLimpar"/>
    <addaction name="menuSobre"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-
   <widget class="QToolBar" name="toolbar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
    <action name="actionEnviarArquivo">
     <property name="text">
      <string>Enviar</string>
@@ -124,9 +131,7 @@
      <string>Configurar</string>
     </property>
    </action>
-   
-  </widget>      
-  
+  </widget>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
@@ -142,7 +147,7 @@
   </action>
   <action name="actionPdTermPro_V1">
    <property name="text">
-    <string>PdTermPro V1.0 Rb</string>
+    <string>PdTermPro V1.1 Ra</string>
    </property>
   </action>
   <action name="actionDesenvolvido_por_PdSilva">

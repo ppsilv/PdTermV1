@@ -6,5 +6,7 @@
     <file>icons/disconnect.png</file>
     <file>icons/clear.png</file>
     <file>icons/settings.png</file>
+    <file>icons/led_green.png</file>
+    <file>icons/led_red.png</file>
   </qresource>
 </RCC>

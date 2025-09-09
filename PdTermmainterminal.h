@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QProgressBar>
-
+#include <QPushButton>
 /*
  * pdtermmainterminal.h
  */
@@ -31,6 +31,7 @@ public:
     bool flag_from_terminal_write_to_serial;
     bool flag_from_serial_write_to_VT100;
     QString openFileXmodem();
+    void updateSerialStatus(bool connected);
 
 public slots:
     void appendTerminalText(const QString &text, const QColor &color = Qt::green, bool newLine = true);
@@ -88,7 +89,9 @@ private:
 
     //Threads clean ups
     void cleanupThread();
-
+    QPushButton *m_serialStatusLed;
+    QLabel *toolbarLed ;
+    QLabel *label ;
 };
 #endif // PGTERMMAINTERMINAL_H
 
