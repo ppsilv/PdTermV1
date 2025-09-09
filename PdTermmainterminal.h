@@ -55,6 +55,9 @@ public slots:
     void on_botaoEnviar_clicked();
     // Slot para finalizar a thread quando o worker terminar
     void onWorkerFinished();
+    void onConectarClicked();
+    void onDesconectarClicked();
+
 
 private:
     QProgressBar *progressBar;

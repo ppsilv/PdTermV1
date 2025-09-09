@@ -38,6 +38,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         pdtermxmodem.h pdtermxmodem.cpp
         icons.qrc
         pdterminalcontrol.h pdterminalcontrol.cpp
+        resource.qrc
     )
 else()
     if(ANDROID)
@@ -83,3 +84,6 @@ install(TARGETS PdTermV1
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(PdTermV1)
 endif()
+
+qt_add_resources(PdTermV1_RESOURCES "resource" "resource.qrc")
+target_sources(PdTermV1 PRIVATE ${PdTermV1_RESOURCES})

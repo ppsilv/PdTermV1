@@ -13,7 +13,7 @@
 #include <QDialog>
 #include <QFormLayout>
 #include <QDialogButtonBox>
-
+#include <QToolBar>
 
 PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     : QMainWindow(parent)
@@ -29,7 +29,46 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     ui->setupUi(this);
     qDebug() << "UI setup completo";
 
-    ui->setupUi(this);
+    //********************************************************************************************************
+    //toolBar Criando manualmente porque se fizer tudo no arquivo UI aparece duplicado, porque o qtcreator cria
+    //uma toolbar por padrao. pelo projeto escolhido
+    // Crie ações manualmente
+    QAction *actionEnviarArquivo = new QAction(QIcon(":/icons/icons/sendfile.png"), "Enviar", this);
+    QAction *actionCancelarEnvio = new QAction(QIcon(":/icons/icons/cancel.png"), "Cancelar", this);
+
+    connect(actionEnviarArquivo, &QAction::triggered, this, &PdTermMainTerminal::on_botaoEnviar_clicked);
+    connect(actionCancelarEnvio, &QAction::triggered, this, [this]() {
+        if (m_xmodemWorker) {
+            QMetaObject::invokeMethod(m_xmodemWorker, "cancelarTransmissao", Qt::QueuedConnection);
+        }
+    });
+
+    ui->toolbar->addAction(actionEnviarArquivo);
+    ui->toolbar->addAction(actionCancelarEnvio);
+
+    ui->toolbar->addSeparator();
+
+    QAction *actionConectar = new QAction(QIcon(":/icons/icons/connect.png"), "Conectar", this);
+    QAction *actionDesconectar = new QAction(QIcon(":/icons/icons/disconnect.png"), "Desconectar", this);
+
+    connect(actionConectar, &QAction::triggered, this, [this]() {
+        m_serial->connectSerial("/dev/ttyUSB0");  // Ou obtenha a porta de um QComboBox
+    });
+    connect(actionDesconectar, &QAction::triggered, m_serial, &PdTermSerial::disconnectSerial);
+
+    QAction *actionConfigurar = new QAction(QIcon(":/icons/icons/settings.png"), "Configurar", this);
+    connect(actionConfigurar, &QAction::triggered,this, &PdTermMainTerminal::on_actionSerialSettings);
+
+    ui->toolbar->addAction(actionConectar);
+    ui->toolbar->addAction(actionDesconectar);
+    ui->toolbar->addAction(actionConfigurar);
+
+    // Estado inicial
+    ui->actionCancelarEnvio->setEnabled(false);
+    ui->actionDesconectar->setEnabled(false);
+    //Fim da criação da toolbar
+    //**********************************************************************************************************
+
     this->setWindowTitle("PdTermV1");
     this->setWindowIcon(QIcon(":icons/pdtermv2.svg"));
     ui->setupUi(this);
@@ -88,48 +127,10 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     QLabel *customLabel = new QLabel("Versão 1.0", this);
     statusBar()->addPermanentWidget(customLabel);
     statusBar()->showMessage("Mensagem no rodapé");
-    /*************************************************************************************/
-    /*************************************************************************************/
-    /*************************************************************************************/
-    // Cria worker e thread
- //   m_worker = new Worker;
- //   m_thread = new QThread(this);
-
- //   // Move o worker para a thread
- //   m_worker->moveToThread(m_thread);
-/*
- * ME PARE4CE QUE O CODIGO ACIMA INICIA A THREAD
- *
- * E O CODIGO ABAIXO TAMBÉM.. ANALIZAR ISSO QUANDO DER!!!
- */
-    // Conexões importantes
-    //connect(m_thread, &QThread::started, m_worker, &Worker::statusUpdated);
-//    connect(m_worker, &Worker::statusUpdated, this, [this](const QString &msg) {
-//        statusBar()->showMessage(msg);  // Conexão com o nome correto
-//    });
-
-    // Garante limpeza automática
-//    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
-//    connect(m_thread, &QThread::finished, m_thread, &QObject::deleteLater);
-
-    // Inicia a thread
-//    m_thread->start();
-    /*************************************************************************************/
-    /*************************************************************************************/
-    /*************************************************************************************/
-
-
 
     //Cursor
     // No construtor da sua classe:
     ui->plainTextEdit->setCursorWidth(2);          // Largura do cursor
-
-    // Cria um menu "File" com ação "Exit"
-//   QMenu *fileMenu = menuBar()->addMenu("&File");  // Adiciona à barra de menus
-//    QAction *exitAction = new QAction("&Exit", this);  // Cria ação Exit
-//    fileMenu->addAction(exitAction);  // Adiciona ao menu
-    // Conecta a ação ao slot que fecha a aplicação
-//    connect(exitAction, &QAction::triggered, this, &PdTermMainTerminal::close);
 
     connect(ui->action_Exit_2, &QAction::triggered, this, &PdTermMainTerminal::close);
 
@@ -142,51 +143,6 @@ PdTermMainTerminal::PdTermMainTerminal(QWidget *parent)
     ui->plainTextEdit->setFocus();
     // No construtor da MainWindow:
     ui->plainTextEdit->installEventFilter(this);
-/*
-    setTextAtPosition(5, 0, "2. Conectar ao banco", Qt::white);
-
-    // Exemplo 1: Texto verde padrão (com quebra de linha)
-    appendTerminalText("$ Usuário logado.");
-
-
-    setTextAtPosition(12, 10, "linha 12");
-
-    appendTerminalText("Usuário logado.");
-
-
-    // Exemplo 1: Escrever "Hello" na linha 5, coluna 10 (verde padrão)
-    setCursorPosition(20, 10);
-    writeTerminal("TEXTO not BOLD na linha 20");
-
-    cor = Qt::red;
-    this->flagsetBold = false;
-    setCursorPosition(10,30);
-    writeTerminal("Texto deveria aparecer em vermelho na lina 10");
-    this->flagsetBold = true;
-    setCursorPosition(11,30);
-    writeTerminal("Texto deveria aparecer em vermelho bold na lina 11");
-
-    cor = Qt::yellow;
-    setCursorPosition(22, 10);
-    writeTerminal("texto cor yellow ");
-    cor = Qt::blue;
-    setCursorPosition(15, 15);
-    writeTerminal("TEXTO AZUL E BOLD na linha 15");
-    cor = Qt::green;
-*/
-    // CONECTE O BOTÃO AO SLOT - ISSO É ESSENCIAL!
-    connect(ui->botaoEnviar, &QPushButton::clicked,
-            this, &PdTermMainTerminal::on_botaoEnviar_clicked);
-
-    // Conecte também o botão de cancelar
-    connect(ui->botaoCancelar, &QPushButton::clicked, this, [this]() {
-        if (m_xmodemWorker) {
-            QMetaObject::invokeMethod(m_xmodemWorker, "cancelarTransmissao", Qt::QueuedConnection);
-        }
-    });
-
-    // Configure estado inicial dos botões
-    ui->botaoCancelar->setEnabled(false);
 
     qDebug() << "Construtor terminado completo";
 
@@ -592,9 +548,9 @@ void PdTermMainTerminal::on_botaoEnviar_clicked()
         return;
     }
 
-    // 1. Impede múltiplos cliques
-    ui->botaoEnviar->setEnabled(false);
-    ui->botaoCancelar->setEnabled(true);
+    // Mude para usar ações da toolbar
+    ui->actionEnviarArquivo->setEnabled(false);
+    ui->actionCancelarEnvio->setEnabled(true);
 
     // 2. Limpa qualquer thread/worker anterior
     if (m_workerThread && m_workerThread->isRunning()) {
@@ -642,8 +598,8 @@ void PdTermMainTerminal::on_botaoEnviar_clicked()
     connect(m_workerThread, &QThread::finished, m_workerThread, &QThread::deleteLater);
     connect(m_workerThread, &QThread::finished, this, [this]() {
         m_workerThread = nullptr;
-        ui->botaoEnviar->setEnabled(true);
-        ui->botaoCancelar->setEnabled(false);
+        ui->actionEnviarArquivo->setEnabled(true);
+        ui->actionCancelarEnvio->setEnabled(false);
     });
 
 
@@ -654,7 +610,12 @@ void PdTermMainTerminal::on_botaoEnviar_clicked()
     connect(m_xmodemWorker, &PdTermXmodem::progressoAtualizado, this, &PdTermMainTerminal::onProgressoAtualizado, Qt::QueuedConnection);
 
     // 9. Conecte o cancelamento
-    connect(ui->botaoCancelar, &QPushButton::clicked, this, [this]() {
+    // Conexão do botão Enviar (agora é ação)
+    connect(ui->actionEnviarArquivo, &QAction::triggered,
+            this, &PdTermMainTerminal::on_botaoEnviar_clicked);
+
+    // Conexão do botão Cancelar (agora é ação)
+    connect(ui->actionCancelarEnvio, &QAction::triggered, this, [this]() {
         if (m_xmodemWorker) {
             QMetaObject::invokeMethod(m_xmodemWorker, "cancelarTransmissao", Qt::QueuedConnection);
         }
@@ -712,12 +673,27 @@ void PdTermMainTerminal::onWorkerFinished()
     m_workerThread = nullptr;
 
     // Reativa o botão de enviar (se necessário)
-    ui->botaoEnviar->setEnabled(true);
-    ui->botaoCancelar->setEnabled(false);
+    ui->actionEnviarArquivo->setEnabled(true);
+    ui->actionCancelarEnvio->setEnabled(false);
 
     // Opcional: atualiza status na UI
     statusBar()->showMessage("Transmissão finalizada");
+    connect(m_workerThread, &QThread::finished, this, [this]() {
+        m_workerThread = nullptr;
+        ui->actionEnviarArquivo->setEnabled(true);
+        ui->actionCancelarEnvio->setEnabled(false);
+    });
 }
+
+void PdTermMainTerminal::onConectarClicked()
+{
+
+}
+void PdTermMainTerminal::onDesconectarClicked()
+{
+
+}
+
 
 void PdTermMainTerminal::cleanupThread()
 {

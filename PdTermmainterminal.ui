@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,9 +32,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>0</y>
+      <y>-3</y>
       <width>801</width>
-      <height>551</height>
+      <height>631</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -50,32 +50,6 @@
     </property>
     <property name="backgroundVisible">
      <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="botaoEnviar">
-    <property name="geometry">
-     <rect>
-      <x>660</x>
-      <y>0</y>
-      <width>131</width>
-      <height>26</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Enviar Arquivo</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="botaoCancelar">
-    <property name="geometry">
-     <rect>
-      <x>660</x>
-      <y>30</y>
-      <width>131</width>
-      <height>26</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Cancelar envio</string>
     </property>
    </widget>
   </widget>
@@ -116,13 +90,43 @@
      <string>Ferramentas</string>
     </property>
     <addaction name="action_Limpar"/>
-    <addaction name="action_Enviar_arquivo"/>
+    <addaction name="actionEnviararquivo"/>
    </widget>
    <addaction name="menuConectar"/>
    <addaction name="menuLimpar"/>
    <addaction name="menuSobre"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+
+  <widget class="QToolBar" name="toolbar">
+   <action name="actionEnviarArquivo">
+    <property name="text">
+     <string>Enviar</string>
+    </property>
+   </action>
+   <action name="actionCancelarEnvio">
+    <property name="text">
+     <string>Cancelar</string>
+    </property>
+   </action>
+   <action name="actionConectarSerial">
+    <property name="text">
+     <string>Conectar</string>
+    </property>
+   </action>
+   <action name="actionDesconectarSerial">
+    <property name="text">
+     <string>Desconectar</string>
+    </property>
+   </action>
+   <action name="actionConfigurarSerial">
+    <property name="text">
+     <string>Configurar</string>
+    </property>
+   </action>
+   
+  </widget>      
+  
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>

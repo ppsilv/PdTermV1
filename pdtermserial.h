@@ -20,7 +20,7 @@ public:
 
     // Conexão com configuração completa
     bool connectSerial(const QString &portName,
-                       int baudRate = 9600,
+                       int baudRate = 115200,
                        QSerialPort::DataBits dataBits = QSerialPort::Data8,
                        QSerialPort::Parity parity = QSerialPort::NoParity,
                        QSerialPort::StopBits stopBits = QSerialPort::OneStop,
