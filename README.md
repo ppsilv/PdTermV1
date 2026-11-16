@@ -17,3 +17,9 @@ Próximos Passos:
 ## 2 - Criar thread para ler inputBuffer e imprimir na tela.
 ## 3 - Criar metodo para inserir dados no output buffer.
 ## 4 - Criar thread para ler outputBuffer e enviar para serial.
+
+# Instalar para rodar em uma nova máquina:
+
+## sudo pacman -S base-devel qt6-base qt6-declarative
+## sudo pacman -S qt6-tools
+## sudo pacman -S qt6-serialport
